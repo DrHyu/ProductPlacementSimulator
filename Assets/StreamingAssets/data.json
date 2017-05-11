@@ -1,0 +1,5 @@
+{
+	"shelves":[
+		{"x_start":20,"y_start":2,"z_start":-20,"n_levels":1,"lvl_offset":3,"x_points":[0,10,20],"y_points":[0,20,0],"front_index":[0,1,2,0],"back_index":[]}		
+	]
+}
