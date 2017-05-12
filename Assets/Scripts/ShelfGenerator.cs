@@ -47,6 +47,9 @@ public class ShelfGenerator : MonoBehaviour
                                         s.y_points[s.front_index[a]]);
         }
 
+        int[] vertexR;
+        Vector3[] offsettedDragline = Drag3D.CalculateDragLines(dragline, 0.2f, out vertexR, false);
+
         // Add the products to the shelf
         current_cubes = new GameObject[n_cubes];
         for (int p = 0; p < n_cubes; p++)
@@ -56,7 +59,12 @@ public class ShelfGenerator : MonoBehaviour
             current_cubes[p].transform.localPosition = new Vector3(0, 0, 0);
 
             Drag3D d3d = current_cubes[p].AddComponent(typeof(Drag3D)) as Drag3D;
-            d3d.setDragline(dragline);
+            d3d.setDragline(offsettedDragline);
+
+            //Rigidbody rgbd = current_cubes[p].AddComponent<Rigidbody>();
+            //rgbd.isKinematic = true;
+            //rgbd.useGravity = false;
+
         }
         
     }

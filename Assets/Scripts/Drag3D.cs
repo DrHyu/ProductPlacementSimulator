@@ -8,14 +8,18 @@ class Drag3D : MonoBehaviour
 {
     private Color mouseOverColor = Color.blue;
     private Color originalColor = Color.yellow;
-    private bool dragging = false;
+    public bool dragging = false;
+    public bool collided = false;
+
+    private Vector3 last_position;
 
     private float distance;
 
     private Vector3 startPos;
 
     public Vector3[] globalDragLines;
-    public  Vector3[] localDragLines;
+    public Vector3[] localDragLines;
+    public int[] global_to_public_relation;
 
     // The face of the cube should always be oriented in this direction
     private Vector2[] normals;
@@ -36,7 +40,7 @@ class Drag3D : MonoBehaviour
 
     void Update()
     {
-        if (dragging)
+        if (dragging && !collided)
         {
             //Calcualte the estimaded mouse position in the 3D space
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -47,7 +51,18 @@ class Drag3D : MonoBehaviour
             //We don't care about the Y pos, since we will always be moving on a plane
             //mousePos3D.y = startPos.y;
 
-            GetComponent<Transform>().localPosition = getClosestPointInCurrentLine(mousePos3D);
+            Vector3 trgt = getClosestPointInCurrentLine(mousePos3D);
+
+            Rigidbody rgdbd = GetComponent<Rigidbody>();
+
+            // Doesnt work
+            //rgdbd.AddForce(trgt - transform.position, ForceMode.Impulse);
+
+            transform.localPosition = last_position;
+        }
+        else if (collided)
+        {
+            transform.localPosition = last_position;
         }
     }
 
@@ -92,14 +107,13 @@ class Drag3D : MonoBehaviour
     private void OnCollisionEnter(Collision c)
     {
         // Only do something if we are the ones causing the colision
-        if (dragging)
-        {
-            GameObject other_cube = c.gameObject;
-            
-            Vector3 other_cube_pos = other_cube.transform.localPosition;
 
-        }
-        
+        collided = true;
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        collided = false;
     }
 
     private void OnGUI()
@@ -142,8 +156,8 @@ class Drag3D : MonoBehaviour
             Gizmos.color = Color.black;
             Gizmos.DrawLine(globalDragLines[i+1], globalDragLines[i+1] + norm);
 
-            Gizmos.color = Color.magenta;
-            Gizmos.DrawLine(globalDragLines[i], globalDragLines[i]+debug[i]);
+            //Gizmos.color = Color.magenta;
+            //Gizmos.DrawLine(globalDragLines[i], globalDragLines[i]+debug[i]);
 
 
         }
@@ -187,6 +201,7 @@ class Drag3D : MonoBehaviour
     {
         globalDragLines = _dragLines;
         offsetDraglineByCubeSize();
+        CalculateNormals();
     }
 
     private void offsetDraglineByCubeSize()
@@ -199,43 +214,21 @@ class Drag3D : MonoBehaviour
 
         Vector3 scale = transform.localScale/2;
 
+        localDragLines = CalculateDragLines(globalDragLines, scale.z, out global_to_public_relation, true);
 
-        //Vector3[] n = new Vector3[globalDragLines.Length];
-        //for (int i = 1; i < globalDragLines.Length - 2; i++)
-        //{
-        //    n[i] = Vector3.Cross(globalDragLines[i + 1] - globalDragLines[i], Vector3.up);
-        //    n[i].Normalize();
-        //}
-        //n[globalDragLines.Length - 1] = n[globalDragLines.Length - 2];
-
-        localDragLines = new Vector3[globalDragLines.Length];
-        debug = new Vector3[globalDragLines.Length];
-        for(int i = 1; i < localDragLines.Length -1; i++)
+        for(int i = 0; i < localDragLines.Length; i++)
         {
-            Vector3 ab = globalDragLines[i] - globalDragLines[i-1];
-            Vector3 bc = globalDragLines[i] - globalDragLines[i+1];
-
-            // Angle between vectors: ang = acos(a.b)
-            float ang = Mathf.Acos(Vector3.Dot(ab, bc)/(ab.magnitude + bc.magnitude)) * 180.0f/(float)Math.PI;
-            Vector3 axis = Vector3.Cross(ab, bc);
-            Quaternion q = Quaternion.AngleAxis(ang/2, axis.normalized);
-
-            debug[i] = q*new Vector3(1,0,1);
-
-
-            Vector3 scle = axis.normalized;
-            //localDragLines[i] = globalDragLines[i] - scle;
+            localDragLines[i].y += scale.y;
         }
 
+        // Shorten start and end points //
+        Vector3 temp = localDragLines[1] - localDragLines[0];
+        temp.Normalize();
+        localDragLines[0] = localDragLines[0] + temp * (scale.x);
 
-        //// Shorten start and end points //
-        //Vector3 temp = localDragLines[1] - localDragLines[0];
-        //temp.Normalize();
-        //localDragLines[0] = localDragLines[0] + temp * ( scale.x / 2);
-
-        //temp = localDragLines[localDragLines.Length - 2] - localDragLines[localDragLines.Length - 1];
-        //temp.Normalize();
-        //localDragLines[localDragLines.Length - 1] = localDragLines[localDragLines.Length - 1] + temp * (scale.x / 2);
+        temp = localDragLines[localDragLines.Length - 2] - localDragLines[localDragLines.Length - 1];
+        temp.Normalize();
+        localDragLines[localDragLines.Length - 1] = localDragLines[localDragLines.Length - 1] + temp * (scale.x);
 
     }
 
@@ -450,7 +443,7 @@ class Drag3D : MonoBehaviour
         return result.ToArray();
     }
 
-    public static Vector3[] CalculateDragLines(Vector3[] points, float offset)
+    public static Vector3[] CalculateDragLines(Vector3[] points, float offset, out int[] vtxRltn, bool doBeizer = false )
     {
         
         Vector2 o1 = points[0].to2DwoY();
@@ -465,7 +458,10 @@ class Drag3D : MonoBehaviour
         Vector2 n2 = o2 - po1o2 * offset;
 
         List<Vector3> newDragline = new List<Vector3>();
+        List<int> vertexRelation = new List<int>();
+
         newDragline.Add(n1.to3DwY(points[0].y));
+        vertexRelation.Add(0);
 
         for (int i = 1; i < points.Length - 1; i++)
         {
@@ -489,33 +485,96 @@ class Drag3D : MonoBehaviour
                 Vector2 n5 = new Ray2D(n1, isc - n1).GetPoint((isc - n1).magnitude - (n2 - isc).magnitude);
                 Vector2 n6 = new Ray2D(n4, isc - n4).GetPoint((isc - n4).magnitude - (n3 - isc).magnitude);
 
-                Vector2[] res = doBezier(new Vector2[] { n5, isc, n6 }, 2, 5);
-
-                for (int p = 0; p < res.Length; p++)
+                if (doBeizer)
                 {
-                    newDragline.Add(res[p].to3DwY(points[i].y));
+                    Vector2[] res = doBezier(new Vector2[] { n5, isc, n6 }, 2, 20);
+
+                    for (int p = 0; p < res.Length; p++)
+                    {
+                        newDragline.Add(res[p].to3DwY(points[i].y));
+                        vertexRelation.Add(i);
+                    }
+
+                    n1 = res[res.Length - 1];    //This one is correct for sure
+                    n2 = n4;    //This one might get fixed next iteration
+                }
+                else
+                {
+                    newDragline.Add(isc.to3DwY(points[i].y));
+                    vertexRelation.Add(i);
+                    n1 = isc;    //This one is correct for sure
+                    n2 = n4;    //This one might get fixed next iteration
+                }
+            }
+            else {
+                Vector2 isc;
+                if (!IntersectRay2D(n1, n2 - n1, n4, n3 - n4, out isc))
+                {
+                    Debug.LogError("Did not intersect");
                 }
 
-                n1 = res[res.Length - 1];    //This one is correct for sure
-                n2 = n4;    //This one might get fixed next iteration
-            }
-            else
-            {
-                newDragline.Add(n2.to3DwY(points[i].y));
-                newDragline.Add(n3.to3DwY(points[i + 1].y));
+                if (doBeizer)
+                {
 
-                n1 = n3;    //This one is correct for sure
-                n2 = n4;    //This one might get fixed next iteration
+                    Vector2[] res = doBezier(new Vector2[] { n2, isc, n3 }, 2, 20);
+
+                    for (int p = 0; p < res.Length; p++)
+                    {
+                        newDragline.Add(res[p].to3DwY(points[i].y));
+                        vertexRelation.Add(i);
+                    }
+
+                    n1 = res[res.Length - 1]; //This one is correct for sure
+                    n2 = n4;    //This one might get fixed next iteration
+                }
+                else
+                {
+                    newDragline.Add(isc.to3DwY(points[i].y));
+                    vertexRelation.Add(i);
+
+                    n1 = isc;    //This one is correct for sure
+                    n2 = n4;    //This one might get fixed next iteration
+                }
             }
+
 
             if (i == points.Length - 2)
             {
                 newDragline.Add(n4.to3DwY(points[i + 1].y));
+                vertexRelation.Add(i+1);
             }
         }
 
+        vtxRltn = vertexRelation.ToArray();
         return newDragline.ToArray();
     }
-    
+
+    public static bool IntersectRay2D(Vector2 p, Vector2 r, Vector2 q, Vector2 s, out Vector2 isc)
+    {
+        float rxs = r.Cross(s);
+        float qminpxr = (q - p).Cross(r);
+
+        // They are coolinear
+        if(rxs == 0 && qminpxr == 0)
+        {
+            isc = p+r;
+            return true;
+        }
+        // They are parallel
+        else if(rxs == 0 && qminpxr != 0)
+        {
+            isc = new Vector2(0,0);
+            return false;
+        }
+        else
+        {
+            float u = qminpxr / (rxs);
+
+            isc = q + u * s;
+            return true;
+        }
+    }
+
+
     /* - - - - - STATIC METHODS - - - - - */
 }
