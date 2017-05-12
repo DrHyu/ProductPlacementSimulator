@@ -6,7 +6,7 @@ public class ShelfGenerator : MonoBehaviour
 
     public int n_cubes = 2;
 
-    public GameObject[] current_cubes;
+    public GameObject[] cubes;
 
     public void Initialize(Shelf s, Mesh msh)
     {
@@ -51,24 +51,43 @@ public class ShelfGenerator : MonoBehaviour
         Vector3[] offsettedDragline = Drag3D.CalculateDragLines(dragline, 0.2f, out vertexR, false);
 
         // Add the products to the shelf
-        current_cubes = new GameObject[n_cubes];
+        cubes = new GameObject[n_cubes];
         for (int p = 0; p < n_cubes; p++)
         {
-            current_cubes[p] = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            current_cubes[p].transform.SetParent(transform);
-            current_cubes[p].transform.localPosition = new Vector3(0, 0, 0);
+            cubes[p] = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cubes[p].transform.SetParent(transform);
+            cubes[p].transform.localPosition = new Vector3(0, 0, 0);
 
-            Drag3D d3d = current_cubes[p].AddComponent(typeof(Drag3D)) as Drag3D;
+            Drag3D d3d = cubes[p].AddComponent(typeof(Drag3D)) as Drag3D;
             d3d.setDragline(offsettedDragline);
 
-            //Rigidbody rgbd = current_cubes[p].AddComponent<Rigidbody>();
-            //rgbd.isKinematic = true;
-            //rgbd.useGravity = false;
+            // Make it so there is always at least a very small gap inw betwwen cubes
+            cubes[p].GetComponent<BoxCollider>().size *= 1.05f;
 
         }
         
     }
 
 
+    public bool cubeIsColided(int cubeMoved)
+    {
+        GameObject g = cubes[cubeMoved];
 
+        for (int i = 0; i < cubes.Length; i++)
+        {
+            if (i == cubeMoved) { continue; }
+
+            Vector3 oc_pos = cubes[i].transform.position;
+            Quaternion oc_rot = cubes[i].transform.rotation;
+
+            if (cubes[i].GetComponent<BoxCollider>().bounds.Intersects(g.GetComponent<BoxCollider>().bounds))
+            {
+                return true;
+            }
+
+        }
+
+
+        return false;
+    }
 }

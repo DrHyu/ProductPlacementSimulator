@@ -6,16 +6,24 @@ using System;
 
 class Drag3D : MonoBehaviour
 {
-    private Color mouseOverColor = Color.blue;
+    // Index within array of cubes in parent objedt
+    private int ID;
+
+    private Color dragColor     = new Color(1,1,1,0.5f);
+    private Color collidedColor = new Color(1, 0, 0, 0.5f);
     private Color originalColor = Color.yellow;
+
+    // Used to keep state machine
     public bool dragging = false;
     public bool collided = false;
 
+    // Used to keep history of the last valid position and index to recover in case of a failed drag
     private Vector3 last_position;
+    private int last_index = 0;
+    public int curent_index = 0;
+    private Vector3 startPos;
 
     private float distance;
-
-    private Vector3 startPos;
 
     public Vector3[] globalDragLines;
     public Vector3[] localDragLines;
@@ -24,9 +32,8 @@ class Drag3D : MonoBehaviour
     // The face of the cube should always be oriented in this direction
     private Vector2[] normals;
 
-    public  Vector3[] debug;
 
-    public int cPointStart = 0;
+    public Vector3[] debug;
 
     /* - - - - - OVERRIDE METHODS - - - - - */
 
@@ -36,11 +43,15 @@ class Drag3D : MonoBehaviour
 
         // Make sure it is at the very start 
         transform.localPosition = localDragLines[0];
+        GetComponent<Renderer>().material.shader = Shader.Find("Transparent/Diffuse");
+        GetComponent<Renderer>().material.color = originalColor;
     }
 
     void Update()
     {
-        if (dragging && !collided)
+
+        // Check if the cbe has colided with another one
+        if(dragging)
         {
             //Calcualte the estimaded mouse position in the 3D space
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -51,24 +62,50 @@ class Drag3D : MonoBehaviour
             //We don't care about the Y pos, since we will always be moving on a plane
             //mousePos3D.y = startPos.y;
 
-            Vector3 trgt = getClosestPointInCurrentLine(mousePos3D);
+            int next_index;
+            // Try the new position
+            transform.localPosition = getClosestPointInCurrentLine(mousePos3D, curent_index, out next_index);
+            curent_index = next_index;
 
-            Rigidbody rgdbd = GetComponent<Rigidbody>();
+            // Check if it colides with anything else on this new location
+            if (GetComponentInParent<ShelfGenerator>().cubeIsColided(ID))
+            {
+                collided = true;
+                updateColor();
+            }
+            // If it does, revert back to the previous position
+            else
+            {
+                collided = false;
+                updateColor();
 
-            // Doesnt work
-            //rgdbd.AddForce(trgt - transform.position, ForceMode.Impulse);
-
-            transform.localPosition = last_position;
+                // This are used to reover the last valid position if, for example, the user stops dragging a block during an intercception
+                last_index = curent_index;
+                last_position = transform.localPosition;
+            }
         }
-        else if (collided)
+
+    }
+
+    private void updateColor()
+    {
+        if (collided)
         {
-            transform.localPosition = last_position;
+            GetComponent<Renderer>().material.color = collidedColor;
+        }
+        else if (dragging)
+        {
+            GetComponent<Renderer>().material.color = dragColor;
+        }
+        else
+        {
+            GetComponent<Renderer>().material.color = originalColor;
         }
     }
 
     private void LateUpdate()
     {
-        Vector3 n = normals[cPointStart].to3DwY(0);
+        Vector3 n = normals[curent_index].to3DwY(0);
 
         transform.localRotation = Quaternion.LookRotation(n);
     }
@@ -80,28 +117,28 @@ class Drag3D : MonoBehaviour
         offsetDraglineByCubeSize();
         CalculateNormals();
 
-        transform.localPosition = localDragLines[cPointStart];
+        transform.localPosition = localDragLines[curent_index];
     }
 
-    void OnMouseEnter()
-    {
-        GetComponent<Renderer>().material.color = mouseOverColor;
-    }
-
-    void OnMouseExit()
-    {
-        GetComponent<Renderer>().material.color = originalColor;
-    }
 
     void OnMouseDown()
     {
+
         distance = Vector3.Distance(GetComponent<Transform>().position, Camera.main.transform.position);
         dragging = true;
+        updateColor();
     }
 
     void OnMouseUp()
     {
+        if (collided)
+        {
+            transform.localPosition = last_position;
+            curent_index = last_index;
+            collided = false;
+        }
         dragging = false;
+        updateColor();
     }
 
     private void OnCollisionEnter(Collision c)
@@ -114,6 +151,12 @@ class Drag3D : MonoBehaviour
     private void OnCollisionExit(Collision collision)
     {
         collided = false;
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        collided = true;
+
     }
 
     private void OnGUI()
@@ -197,6 +240,11 @@ class Drag3D : MonoBehaviour
         
     }
 
+    public void setId(int _ID)
+    {
+        ID = _ID;
+    }
+
     public void setDragline(Vector3[] _dragLines)
     {
         globalDragLines = _dragLines;
@@ -244,16 +292,16 @@ class Drag3D : MonoBehaviour
         }
     }
 
-    private Vector3 getClosestPointInCurrentLine(Vector3 point)
+    private Vector3 getClosestPointInCurrentLine(Vector3 point, int c_index, out int n_index)
     {
         //Do some trigonometry to find out the closes point in the vector to the mouse position
-        Vector3 SE = localDragLines[cPointStart + 1] - localDragLines[cPointStart];
-        Vector3 CS = point - localDragLines[cPointStart];
+        Vector3 SE = localDragLines[c_index + 1] - localDragLines[c_index];
+        Vector3 CS = point - localDragLines[c_index];
 
         float alpha = Mathf.Acos(Vector3.Dot(SE, CS) / (SE.magnitude * CS.magnitude));
         float con = CS.magnitude * Mathf.Cos(alpha);
 
-        Ray r = new Ray(localDragLines[cPointStart], SE);
+        Ray r = new Ray(localDragLines[c_index], SE);
 
         // This is the point in the segment where we want the mouse to move
         Vector3 insc = r.GetPoint(con);
@@ -262,72 +310,72 @@ class Drag3D : MonoBehaviour
         // Without it, the obect could move in a (infinite) line. 
         // This bounds the object movement to the ends to the segment.
         // Also, if either ends of the segment is reached, it will move on the respective next segment in the localDragLines array
-        Vector3 big_x = (localDragLines[cPointStart + 1].x > localDragLines[cPointStart].x) ? localDragLines[cPointStart + 1] : localDragLines[cPointStart];
-        Vector3 small_x = (localDragLines[cPointStart + 1].x < localDragLines[cPointStart].x) ? localDragLines[cPointStart + 1] : localDragLines[cPointStart];
+        Vector3 big_x = (localDragLines[c_index + 1].x > localDragLines[c_index].x) ? localDragLines[c_index + 1] : localDragLines[c_index];
+        Vector3 small_x = (localDragLines[c_index + 1].x < localDragLines[c_index].x) ? localDragLines[c_index + 1] : localDragLines[c_index];
 
-        Vector3 big_y = (localDragLines[cPointStart + 1].y > localDragLines[cPointStart].y) ? localDragLines[cPointStart + 1] : localDragLines[cPointStart];
-        Vector3 small_y = (localDragLines[cPointStart + 1].y < localDragLines[cPointStart].y) ? localDragLines[cPointStart + 1] : localDragLines[cPointStart];
+        Vector3 big_y = (localDragLines[c_index + 1].y > localDragLines[c_index].y) ? localDragLines[c_index + 1] : localDragLines[c_index];
+        Vector3 small_y = (localDragLines[c_index + 1].y < localDragLines[c_index].y) ? localDragLines[c_index + 1] : localDragLines[c_index];
 
-        Vector3 big_z = (localDragLines[cPointStart + 1].z > localDragLines[cPointStart].z) ? localDragLines[cPointStart + 1] : localDragLines[cPointStart];
-        Vector3 small_z = (localDragLines[cPointStart + 1].z < localDragLines[cPointStart].z) ? localDragLines[cPointStart + 1] : localDragLines[cPointStart];
+        Vector3 big_z = (localDragLines[c_index + 1].z > localDragLines[c_index].z) ? localDragLines[c_index + 1] : localDragLines[c_index];
+        Vector3 small_z = (localDragLines[c_index + 1].z < localDragLines[c_index].z) ? localDragLines[c_index + 1] : localDragLines[c_index];
 
-        int big_x_incr = (localDragLines[cPointStart + 1].x > localDragLines[cPointStart].x) ? 1 : -1;
-        int small_x_incr = (localDragLines[cPointStart + 1].x < localDragLines[cPointStart].x) ? 1 : -1;
+        int big_x_incr = (localDragLines[c_index + 1].x > localDragLines[c_index].x) ? 1 : -1;
+        int small_x_incr = (localDragLines[c_index + 1].x < localDragLines[c_index].x) ? 1 : -1;
 
-        int big_y_incr = (localDragLines[cPointStart + 1].y > localDragLines[cPointStart].y) ? 1 : -1;
-        int small_y_incr = (localDragLines[cPointStart + 1].y < localDragLines[cPointStart].y) ? 1 : -1;
+        int big_y_incr = (localDragLines[c_index + 1].y > localDragLines[c_index].y) ? 1 : -1;
+        int small_y_incr = (localDragLines[c_index + 1].y < localDragLines[c_index].y) ? 1 : -1;
 
-        int big_z_incr = (localDragLines[cPointStart + 1].z > localDragLines[cPointStart].z) ? 1 : -1;
-        int small_z_incr = (localDragLines[cPointStart + 1].z < localDragLines[cPointStart].z) ? 1 : -1;
+        int big_z_incr = (localDragLines[c_index + 1].z > localDragLines[c_index].z) ? 1 : -1;
+        int small_z_incr = (localDragLines[c_index + 1].z < localDragLines[c_index].z) ? 1 : -1;
 
         if (insc.x > big_x.x)
         {
             insc = big_x;
 
-            cPointStart += big_x_incr;
+            c_index += big_x_incr;
         }
         else if (insc.x < small_x.x)
         {
             insc = small_x;
 
-            cPointStart += small_x_incr;
+            c_index += small_x_incr;
         }
         if (insc.y > big_y.y)
         {
             insc = big_y;
 
-            cPointStart += big_y_incr;
+            c_index += big_y_incr;
         }
         else if (insc.y < small_y.y)
         {
             insc = small_y;
 
-            cPointStart += small_y_incr;
+            c_index += small_y_incr;
         }
         else if (insc.z > big_z.z)
         {
             insc = big_z;
 
-            cPointStart += big_z_incr;
+            c_index += big_z_incr;
         }
         else if (insc.z < small_z.z)
         {
             insc = small_z;
 
-            cPointStart += small_z_incr;
+            c_index += small_z_incr;
         }
 
-        if (cPointStart < 0)
+        if (c_index < 0)
         {
-            cPointStart = 0;
+            c_index = 0;
             insc = localDragLines[0];
         }
-        else if (cPointStart >= localDragLines.Length - 1)
+        else if (c_index >= localDragLines.Length - 1)
         {
-            cPointStart = localDragLines.Length - 2;
+            c_index = localDragLines.Length - 2;
             insc = localDragLines[localDragLines.Length - 1];
         }
-
+        n_index = c_index;
         return insc;
     }
 
