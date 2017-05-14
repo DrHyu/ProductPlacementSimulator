@@ -12,22 +12,30 @@ public class SceneGenerator : MonoBehaviour
     private SceneData sceneData;
     public string dataJson = "data.json";
 
-    public GameObject[] stands;
+    public List<Stand> stands;
+
     
     void Start()
     {
         LoadShelfData();
 
-        stands = new GameObject[sceneData.shelves.Length];
+        stands = new List<Stand>();
 
-        for(int i = 0; i < sceneData.shelves.Length; i++)
+        for (int i = 0; i < sceneData.stands.Length; i++)
         {
-            GameObject ss = new GameObject("Stand_" + i);
+            GameObject g = new GameObject(sceneData.stands[i].name);
+            g.transform.SetParent(transform);
 
-            StandfGenerator SG =  ss.AddComponent<StandfGenerator>();
-            SG.initialize(sceneData.shelves[i]);
+            Stand STD = g.AddComponent(typeof(Stand)) as Stand;
+            stands.Add(STD);
+            STD.Initialize(sceneData.stands[i]);
         }
 
+        GameObject UI = GameObject.Find("UIController");
+
+        // Link the UI cotroller to the stand objects
+        UIController uiController = UI.GetComponent<UIController>();
+        uiController.SetStandList(stands);
     }
 
     private void LoadShelfData()

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-
-[Serializable]
 public class Shelf {
 
     public float x_start;
@@ -18,6 +16,8 @@ public class Shelf {
     public int[] front_index;
     public int[] back_index;
 
+    public float thickness;
+
     public Shelf (float _x, float _y, float _z, float[] _x_points, float[] _y_points, int[] _front_index = null)
     {
         x_start = _x;
@@ -28,5 +28,8 @@ public class Shelf {
         y_points = _y_points;
 
         front_index = _front_index;
+
+
+
     }
 }

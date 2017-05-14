@@ -86,19 +86,19 @@
   <ItemGroup>
     <Compile Include="Assets\MouseDisplayer.cs" />
     <Compile Include="Assets\Scripts\BezierLines.cs" />
-    <Compile Include="Assets\Scripts\CameraController.cs" />
+    <Compile Include="Assets\Scripts\BoxSelector.cs" />
+    <Compile Include="Assets\Scripts\DataStructs\JSONDataStructs.cs" />
+    <Compile Include="Assets\Scripts\DataStructs\Shelf.cs" />
     <Compile Include="Assets\Scripts\Drag3D.cs" />
     <Compile Include="Assets\Scripts\Extensions.cs" />
-    <Compile Include="Assets\Scripts\MeshGenerator.cs" />
+    <Compile Include="Assets\Scripts\Generators\MeshGenerator.cs" />
+    <Compile Include="Assets\Scripts\Generators\SceneGenerator.cs" />
+    <Compile Include="Assets\Scripts\Generators\ShelfGenerator.cs" />
+    <Compile Include="Assets\Scripts\Generators\Stand.cs" />
     <Compile Include="Assets\Scripts\OldStuff\Drag.cs" />
     <Compile Include="Assets\Scripts\OldStuff\PlayerController.cs" />
-    <Compile Include="Assets\Scripts\SceneData.cs" />
-    <Compile Include="Assets\Scripts\SceneGenerator.cs" />
-    <Compile Include="Assets\Scripts\Shelf.cs" />
-    <Compile Include="Assets\Scripts\ShelfGenerator.cs" />
-    <Compile Include="Assets\Scripts\ShelfJSON.cs" />
-    <Compile Include="Assets\Scripts\StandGenerator.cs" />
     <Compile Include="Assets\Scripts\Triangulator.cs" />
+    <Compile Include="Assets\Scripts\UIController.cs" />
     <Compile Include="Assets\Scripts\Vector.cs" />
   </ItemGroup>
   <ItemGroup>

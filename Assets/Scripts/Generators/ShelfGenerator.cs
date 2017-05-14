@@ -4,27 +4,35 @@ using UnityEditor;
 public class ShelfGenerator : MonoBehaviour
 {
 
-    public int n_cubes = 2;
-
+    public int n_cubes;
     public GameObject[] cubes;
 
-    public void Initialize(Shelf s, Mesh msh)
+    public string name;
+
+
+    public void Initialize(ShelfJSON s, string _name)
     {
+
+        name = _name;
 
         transform.localPosition = new Vector3(s.x_start, s.y_start, s.z_start);
 
+        // Generate new mesh game object
         GameObject mesh_object = new GameObject("mesh");
 
+        // Calculate the mesh from the raw data
+        MeshGenerator meshGen = new MeshGenerator(s.x_points, s.y_points);
+        Mesh msh = meshGen.get3DMeshFrom2D(-s.thickness);
 
+        // Render the mesh
         mesh_object.AddComponent(typeof(MeshRenderer));
-        MeshFilter filter = mesh_object.AddComponent(typeof(MeshFilter)) as MeshFilter;
-        filter.mesh = msh;
+        MeshFilter meshRenderer = mesh_object.AddComponent(typeof(MeshFilter)) as MeshFilter;
+        meshRenderer.mesh = msh;
         mesh_object.GetComponent<Renderer>().material.color = Color.white;
         mesh_object.GetComponent<Transform>().localScale = new Vector3(1, 1, 1);
-        
-        mesh_object.transform.SetParent(transform);
-
+        mesh_object.GetComponent<Transform>().SetParent(transform);
         mesh_object.GetComponent<Transform>().localPosition = new Vector3(0, 0, 0);
+
 
 
         // Calculate the the points that belong to the front face of the shelf
@@ -51,6 +59,8 @@ public class ShelfGenerator : MonoBehaviour
         Vector3[] offsettedDragline = Drag3D.CalculateDragLines(dragline, 0.2f, out vertexR, false);
 
         // Add the products to the shelf
+
+        n_cubes = 1 + (int)(Random.value * 5);
         cubes = new GameObject[n_cubes];
         for (int p = 0; p < n_cubes; p++)
         {
@@ -58,8 +68,12 @@ public class ShelfGenerator : MonoBehaviour
             cubes[p].transform.SetParent(transform);
             cubes[p].transform.localPosition = new Vector3(0, 0, 0);
 
+            //TODO testing
+            cubes[p].transform.localScale = new Vector3(Random.value * 2, Random.value * 2, Random.value * 2);
+
             Drag3D d3d = cubes[p].AddComponent(typeof(Drag3D)) as Drag3D;
             d3d.setDragline(offsettedDragline);
+            d3d.setId(p);
 
             // Make it so there is always at least a very small gap inw betwwen cubes
             cubes[p].GetComponent<BoxCollider>().size *= 1.05f;
@@ -69,25 +83,40 @@ public class ShelfGenerator : MonoBehaviour
     }
 
 
+    // Methods used by childs to check/clear collisions with other childs //
+
     public bool cubeIsColided(int cubeMoved)
     {
-        GameObject g = cubes[cubeMoved];
+        Bounds cubeMovedBounds = cubes[cubeMoved].GetComponent<BoxCollider>().bounds;
 
+        bool colision_happened = false;
         for (int i = 0; i < cubes.Length; i++)
         {
             if (i == cubeMoved) { continue; }
 
-            Vector3 oc_pos = cubes[i].transform.position;
-            Quaternion oc_rot = cubes[i].transform.rotation;
-
-            if (cubes[i].GetComponent<BoxCollider>().bounds.Intersects(g.GetComponent<BoxCollider>().bounds))
+            if (cubes[i].GetComponent<BoxCollider>().bounds.Intersects(cubeMovedBounds))
             {
-                return true;
+                // Update the other cube's color to show collision aswell.
+                cubes[i].GetComponent<Drag3D>().collided_upon = true;
+                cubes[i].GetComponent<Drag3D>().updateColor();
+                colision_happened = true;
+            }
+            else
+            {
+                cubes[i].GetComponent<Drag3D>().collided_upon = false;
+                cubes[i].GetComponent<Drag3D>().updateColor();
             }
 
         }
+        return colision_happened;
+    }
 
-
-        return false;
+    public void clearCollision()
+    {
+        for (int i = 0; i < cubes.Length; i++)
+        {
+            cubes[i].GetComponent<Drag3D>().collided_upon = false;
+            cubes[i].GetComponent<Drag3D>().updateColor();
+        }
     }
 }

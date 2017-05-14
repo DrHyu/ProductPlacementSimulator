@@ -11,11 +11,13 @@ class Drag3D : MonoBehaviour
 
     private Color dragColor     = new Color(1,1,1,0.5f);
     private Color collidedColor = new Color(1, 0, 0, 0.5f);
+    private Color collidedUponColor = new Color(0, 0, 1, 0.5f);
     private Color originalColor = Color.yellow;
 
     // Used to keep state machine
     public bool dragging = false;
     public bool collided = false;
+    public bool collided_upon = false;
 
     // Used to keep history of the last valid position and index to recover in case of a failed drag
     private Vector3 last_position;
@@ -76,6 +78,12 @@ class Drag3D : MonoBehaviour
             // If it does, revert back to the previous position
             else
             {
+                // If transitioning from collided to non collided
+                if (collided)
+                {
+                    // Notify that we are not longer in collision and cubes that are "collided upon" can reset to default state
+                    GetComponentInParent<ShelfGenerator>().clearCollision();
+                }
                 collided = false;
                 updateColor();
 
@@ -87,9 +95,14 @@ class Drag3D : MonoBehaviour
 
     }
 
-    private void updateColor()
+    public void updateColor()
     {
-        if (collided)
+        if (collided_upon)
+        {
+            GetComponent<Renderer>().material.color = collidedUponColor;
+
+        }
+        else if (collided)
         {
             GetComponent<Renderer>().material.color = collidedColor;
         }
@@ -133,6 +146,8 @@ class Drag3D : MonoBehaviour
     {
         if (collided)
         {
+            // Notify that we are not longer in collision and cubes that are "collided upon" can reset to default state
+            GetComponentInParent<ShelfGenerator>().clearCollision();
             transform.localPosition = last_position;
             curent_index = last_index;
             collided = false;
@@ -535,7 +550,7 @@ class Drag3D : MonoBehaviour
 
                 if (doBeizer)
                 {
-                    Vector2[] res = doBezier(new Vector2[] { n5, isc, n6 }, 2, 20);
+                    Vector2[] res = doBezier(new Vector2[] { n5, isc, n6 }, 2, 40);
 
                     for (int p = 0; p < res.Length; p++)
                     {
