@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.6.0f3</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion>4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -86,7 +88,7 @@
   <ItemGroup>
     <Compile Include="Assets\MouseDisplayer.cs" />
     <Compile Include="Assets\Scripts\BezierLines.cs" />
-    <Compile Include="Assets\Scripts\BoxSelector.cs" />
+    <Compile Include="Assets\Scripts\UIStuff\TextScrollView.cs" />
     <Compile Include="Assets\Scripts\DataStructs\JSONDataStructs.cs" />
     <Compile Include="Assets\Scripts\DataStructs\Shelf.cs" />
     <Compile Include="Assets\Scripts\Drag3D.cs" />
@@ -97,8 +99,9 @@
     <Compile Include="Assets\Scripts\Generators\Stand.cs" />
     <Compile Include="Assets\Scripts\OldStuff\Drag.cs" />
     <Compile Include="Assets\Scripts\OldStuff\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\UIStuff\TextClickHandle.cs" />
     <Compile Include="Assets\Scripts\Triangulator.cs" />
-    <Compile Include="Assets\Scripts\UIController.cs" />
+    <Compile Include="Assets\Scripts\UIStuff\UIController.cs" />
     <Compile Include="Assets\Scripts\Vector.cs" />
   </ItemGroup>
   <ItemGroup>

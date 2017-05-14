@@ -7,28 +7,31 @@ public class UIController : MonoBehaviour {
 
     public Dropdown standDropDown;
     public Dropdown shelfDropDown;
-    public BoxSelector boxLister;
+    public TextScrollView textScrollView;
 
     private List<Stand> standList;
     private List<string> standNames;
-    private int standIndex;
+    public int standIndex;
 
     private List<string> shelfNames;
-    private int shelfIndex;
+    public int shelfIndex;
 
     private List<string> boxNames;
-    private int boxIndex;
+    public int boxIndex;
 
 
     public void Initialize()
     {
-
 
         standNames = new List<string>();
         for (int i = 0; i < standList.Count; i++)
         {
             standNames.Add(standList[i].ToString());
         }
+
+        GameObject SCRLLV = GameObject.Find("TextScrollViewContent");
+
+        SCRLLV.GetComponent<TextScrollView>().RegisterClickCallback(BoxSlectedIndexChanged);
 
         updateStandDropDown();
         updateShelfDropDown();
@@ -41,7 +44,6 @@ public class UIController : MonoBehaviour {
         Initialize();
     }
 
-
     public void StandDropDownIndexChanged(int index)
     {
         standIndex = index;
@@ -52,7 +54,12 @@ public class UIController : MonoBehaviour {
         shelfIndex = index;
         updateBoxLister();
     }
+    public void BoxSlectedIndexChanged(int index)
+    {
+        boxIndex = index;
 
+        standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Renderer>().material.color = new Color(1, 1, 1, 0.1f);
+    }
 
 
 
@@ -82,8 +89,8 @@ public class UIController : MonoBehaviour {
             boxNames.Add(standList[standIndex].shelves[shelfIndex].cubes[i].name);
         }
 
-        boxLister.Clear();
-        boxLister.AddText(boxNames);
+        textScrollView.Clear();
+        textScrollView.AddText(boxNames);
         boxIndex = 0;
     }
 
