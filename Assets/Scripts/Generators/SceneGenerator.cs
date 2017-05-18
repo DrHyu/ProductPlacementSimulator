@@ -3,7 +3,9 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System;
 
+[Serializable]
 public class SceneGenerator : MonoBehaviour
 {
     //store gameObject reference

@@ -3,23 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TextScrollView : MonoBehaviour {
+public class TextScrollView : CallBackRegisterableClass {
 
     private List<GameObject> texts;
 
     public GameObject prefab;
 
-    public int current_index;
-
-    public delegate void ClickHandler(int index);
-    private List<ClickHandler> callBacks;
+    public int current_index = -1;
 
     public void AddText(List<string> _new)
     {
         if(texts == null)
         {
             texts = new List<GameObject>();
-            current_index = 0;
+            current_index = -1;
         }
 
         int prev_size = texts.Count;
@@ -32,6 +29,10 @@ public class TextScrollView : MonoBehaviour {
             g.GetComponent<TextClickHandle>().setID(i+ prev_size);
             texts.Add(g);
         }
+        if (current_index != -1)
+        {
+            texts[current_index].GetComponent<Text>().color = Color.cyan;
+        }
     }
 
     public void AddText(string _new)
@@ -39,7 +40,7 @@ public class TextScrollView : MonoBehaviour {
         if (texts == null)
         {
             texts = new List<GameObject>();
-            current_index = 0;
+            current_index =-1;
         }
 
         GameObject g = (GameObject)Instantiate(prefab);
@@ -48,6 +49,11 @@ public class TextScrollView : MonoBehaviour {
         g.GetComponent<Text>().text = _new;
         g.GetComponent<TextClickHandle>().setID(texts.Count);
         texts.Add(g);
+
+        if (current_index != -1)
+        {
+            texts[current_index].GetComponent<Text>().color = Color.cyan;
+        }
     }
 
     public void Clear()
@@ -63,29 +69,24 @@ public class TextScrollView : MonoBehaviour {
         }
 
         texts.Clear();
-        current_index = 0;
+        current_index = -1;
     }
 
-    public void RegisterClickCallback(ClickHandler f)
-    {
-        if(callBacks == null)
-        {
-            callBacks = new List<ClickHandler>();
-        }
-        callBacks.Add(f);
-    }
 
     public void TextWasClicked(int index)
     {
-        texts[current_index].GetComponent<Text>().color = Color.white;
+        if (current_index != -1) { 
+            texts[current_index].GetComponent<Text>().color = Color.white;
+        }
+
         texts[index].GetComponent<Text>().color = Color.cyan;
         current_index = index;
 
-        if (callBacks != null)
+        if (indexChangedCallback != null)
         {
-            for (int i = 0; i < callBacks.Count; i++)
+            for (int i = 0; i < indexChangedCallback.Count; i++)
             {
-                callBacks[i](index);
+                indexChangedCallback[i](index);
             }
         }
     }

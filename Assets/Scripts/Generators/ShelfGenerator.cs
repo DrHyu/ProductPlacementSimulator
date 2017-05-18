@@ -1,14 +1,16 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
+using System;
 
+[Serializable]
 public class ShelfGenerator : MonoBehaviour
 {
 
     public int n_cubes;
-    public GameObject[] cubes;
+    public List<GameObject> cubes;
 
     public string name;
-
 
     public void Initialize(ShelfJSON s, string _name)
     {
@@ -16,6 +18,7 @@ public class ShelfGenerator : MonoBehaviour
         name = _name;
 
         transform.localPosition = new Vector3(s.x_start, s.y_start, s.z_start);
+        transform.localRotation = Quaternion.identity;
 
         // Generate new mesh game object
         GameObject mesh_object = new GameObject("mesh");
@@ -28,10 +31,12 @@ public class ShelfGenerator : MonoBehaviour
         mesh_object.AddComponent(typeof(MeshRenderer));
         MeshFilter meshRenderer = mesh_object.AddComponent(typeof(MeshFilter)) as MeshFilter;
         meshRenderer.mesh = msh;
+
         mesh_object.GetComponent<Renderer>().material.color = Color.white;
         mesh_object.GetComponent<Transform>().localScale = new Vector3(1, 1, 1);
         mesh_object.GetComponent<Transform>().SetParent(transform);
         mesh_object.GetComponent<Transform>().localPosition = new Vector3(0, 0, 0);
+        mesh_object.GetComponent<Transform>().localRotation = Quaternion.identity;
 
 
 
@@ -60,16 +65,16 @@ public class ShelfGenerator : MonoBehaviour
 
         // Add the products to the shelf
 
-        n_cubes = 1 + (int)(Random.value * 5);
-        cubes = new GameObject[n_cubes];
+        n_cubes = 1 + (int)(UnityEngine.Random.value * 5);
+        cubes = new List<GameObject>();
         for (int p = 0; p < n_cubes; p++)
         {
-            cubes[p] = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cubes.Add(GameObject.CreatePrimitive(PrimitiveType.Cube));
             cubes[p].transform.SetParent(transform);
             cubes[p].transform.localPosition = new Vector3(0, 0, 0);
 
             //TODO testing
-            cubes[p].transform.localScale = new Vector3(Random.value * 2, Random.value * 2, Random.value * 2);
+            cubes[p].transform.localScale = new Vector3(UnityEngine.Random.value * 2, UnityEngine.Random.value * 2, UnityEngine.Random.value * 2);
 
             Drag3D d3d = cubes[p].AddComponent(typeof(Drag3D)) as Drag3D;
             d3d.setDragline(offsettedDragline);
@@ -90,7 +95,7 @@ public class ShelfGenerator : MonoBehaviour
         Bounds cubeMovedBounds = cubes[cubeMoved].GetComponent<BoxCollider>().bounds;
 
         bool colision_happened = false;
-        for (int i = 0; i < cubes.Length; i++)
+        for (int i = 0; i < cubes.Count; i++)
         {
             if (i == cubeMoved) { continue; }
 
@@ -113,7 +118,7 @@ public class ShelfGenerator : MonoBehaviour
 
     public void clearCollision()
     {
-        for (int i = 0; i < cubes.Length; i++)
+        for (int i = 0; i < cubes.Count; i++)
         {
             cubes[i].GetComponent<Drag3D>().collided_upon = false;
             cubes[i].GetComponent<Drag3D>().updateColor();

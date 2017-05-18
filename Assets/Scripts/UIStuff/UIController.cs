@@ -7,7 +7,9 @@ public class UIController : MonoBehaviour {
 
     public Dropdown standDropDown;
     public Dropdown shelfDropDown;
-    public TextScrollView textScrollView;
+    public TextScrollView textscrollView;
+    public Button addButton;
+    public Button removeButton;
 
     private List<Stand> standList;
     private List<string> standNames;
@@ -17,8 +19,9 @@ public class UIController : MonoBehaviour {
     public int shelfIndex;
 
     private List<string> boxNames;
-    public int boxIndex;
+    public int boxIndex = -1;
 
+    private GameObject scrollView;
 
     public void Initialize()
     {
@@ -29,9 +32,9 @@ public class UIController : MonoBehaviour {
             standNames.Add(standList[i].ToString());
         }
 
-        GameObject SCRLLV = GameObject.Find("TextScrollViewContent");
-
-        SCRLLV.GetComponent<TextScrollView>().RegisterClickCallback(BoxSlectedIndexChanged);
+        textscrollView.RegisterIndexChangedCallback(BoxSlectedIndexChanged);
+        addButton.GetComponent<ButtonClickCallback>().RegisterClickCallback(OnAddButtonPressed);
+        removeButton.GetComponent<ButtonClickCallback>().RegisterClickCallback(OnRemoveButoonPressed);
 
         updateStandDropDown();
         updateShelfDropDown();
@@ -46,19 +49,58 @@ public class UIController : MonoBehaviour {
 
     public void StandDropDownIndexChanged(int index)
     {
+        if (boxIndex != -1)
+        {
+            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().selected = false;
+            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().updateColor();
+        }
+
         standIndex = index;
         updateShelfDropDown();
     }
     public void ShelfDropDownIndexChanged(int index)
     {
+        if (boxIndex != -1)
+        {
+            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().selected = false;
+            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().updateColor();
+        }
+
         shelfIndex = index;
         updateBoxLister();
     }
     public void BoxSlectedIndexChanged(int index)
     {
-        boxIndex = index;
+        if (boxIndex != -1)
+        {
+            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().selected = false;
+            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().updateColor();
+        }
 
-        standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Renderer>().material.color = new Color(1, 1, 1, 0.1f);
+        standList[standIndex].shelves[shelfIndex].cubes[index].GetComponent<Drag3D>().selected = true;
+        standList[standIndex].shelves[shelfIndex].cubes[index].GetComponent<Drag3D>().updateColor();
+
+        boxIndex = index;
+    }
+
+    public void OnAddButtonPressed()
+    {
+        
+    }
+
+    public void OnRemoveButoonPressed()
+    {
+        if (standList[standIndex].shelves[shelfIndex].cubes[boxIndex] != null )
+        {
+            GameObject.Destroy(standList[standIndex].shelves[shelfIndex].cubes[boxIndex]);
+
+            standList[standIndex].shelves[shelfIndex].cubes.RemoveAt(boxIndex);
+            boxIndex--;
+
+            // Clear and fill up again the txt scroll view
+            // Keep the same id 
+            updateBoxLister(false);
+        }
     }
 
 
@@ -71,6 +113,8 @@ public class UIController : MonoBehaviour {
     }
     private void updateShelfDropDown()
     {
+        shelfIndex = 0;
+
         shelfNames = new List<string>();
         for (int i = 0; i < standList[standIndex].shelves.Length; i++)
         {
@@ -79,19 +123,27 @@ public class UIController : MonoBehaviour {
 
         shelfDropDown.ClearOptions();
         shelfDropDown.AddOptions(shelfNames);
-        shelfIndex = 0;
     }
-    private void updateBoxLister()
+    private void updateBoxLister(bool resetIndex = true)
     {
+        if (resetIndex) {
+            boxIndex = -1;
+        }
+
         boxNames = new List<string>();
-        for (int i = 0; i < standList[standIndex].shelves[shelfIndex].cubes.Length; i++)
+        for (int i = 0; i < standList[standIndex].shelves[shelfIndex].cubes.Count; i++)
         {
             boxNames.Add(standList[standIndex].shelves[shelfIndex].cubes[i].name);
         }
 
-        textScrollView.Clear();
-        textScrollView.AddText(boxNames);
-        boxIndex = 0;
+        textscrollView.Clear();
+        textscrollView.AddText(boxNames);
+
+        if (boxIndex != -1)
+        {
+            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().selected = true;
+            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().updateColor();
+        }
     }
 
 }
