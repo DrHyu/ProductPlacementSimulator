@@ -11,7 +11,7 @@ public class UIController : MonoBehaviour {
     public Button addButton;
     public Button removeButton;
 
-    private List<Stand> standList;
+    private List<StandGenerator> standList;
     private List<string> standNames;
     public int standIndex;
 
@@ -41,7 +41,7 @@ public class UIController : MonoBehaviour {
         updateBoxLister();
     }
 
-    public void SetStandList(List<Stand> _standList)
+    public void SetStandList(List<StandGenerator> _standList)
     {
         standList = _standList;
         Initialize();

@@ -6,18 +6,23 @@ using System;
 [Serializable]
 public class ShelfGenerator : MonoBehaviour
 {
-
     public int n_cubes;
     public List<GameObject> cubes;
 
-    public string name;
+    public ShelfJSON this_shelf;
 
-    public void Initialize(ShelfJSON s, string _name)
+    private void Start()
     {
+        
+    }
 
-        name = _name;
+    public void Initialize(ShelfJSON s)
+    {
+        name = s.name;
 
-        transform.localPosition = new Vector3(s.x_start, s.y_start, s.z_start);
+        this_shelf = s;
+
+        transform.localPosition = new Vector3(0,s.height,0);
         transform.localRotation = Quaternion.identity;
 
         // Generate new mesh game object
@@ -37,8 +42,6 @@ public class ShelfGenerator : MonoBehaviour
         mesh_object.GetComponent<Transform>().SetParent(transform);
         mesh_object.GetComponent<Transform>().localPosition = new Vector3(0, 0, 0);
         mesh_object.GetComponent<Transform>().localRotation = Quaternion.identity;
-
-
 
         // Calculate the the points that belong to the front face of the shelf
         // If none ar given, they are all front face by default
@@ -63,33 +66,41 @@ public class ShelfGenerator : MonoBehaviour
         int[] vertexR;
         Vector3[] offsettedDragline = Drag3D.CalculateDragLines(dragline, 0.2f, out vertexR, false);
 
-        // Add the products to the shelf
+        // Make some dummy boxes if none available
+        if(this_shelf.boxes == null || this_shelf.boxes.Length == 0)
+        {
+            // Add the products to the shelf
+            n_cubes = 1 + (int)(UnityEngine.Random.value * 5);
+            this_shelf.boxes = new BoxJSON[n_cubes];
 
-        n_cubes = 1 + (int)(UnityEngine.Random.value * 5);
+            for (int p = 0; p < n_cubes; p++)
+            {
+                this_shelf.boxes[p] = new BoxJSON();
+                this_shelf.boxes[p].current_index = 0;
+                this_shelf.boxes[p].current_pos_relative = 0;
+                this_shelf.boxes[p].width = 0.5f + UnityEngine.Random.value * 2f;
+                this_shelf.boxes[p].height = 0.5f + UnityEngine.Random.value * 2f;
+                this_shelf.boxes[p].depth = 0.5f + UnityEngine.Random.value * 2f;
+            }
+        }
+
         cubes = new List<GameObject>();
-        for (int p = 0; p < n_cubes; p++)
+
+        for (int p = 0; p < this_shelf.boxes.Length; p++)
         {
             cubes.Add(GameObject.CreatePrimitive(PrimitiveType.Cube));
             cubes[p].transform.SetParent(transform);
-            cubes[p].transform.localPosition = new Vector3(0, 0, 0);
-
-            //TODO testing
-            cubes[p].transform.localScale = new Vector3(UnityEngine.Random.value * 2, UnityEngine.Random.value * 2, UnityEngine.Random.value * 2);
 
             Drag3D d3d = cubes[p].AddComponent(typeof(Drag3D)) as Drag3D;
-            d3d.setDragline(offsettedDragline);
-            d3d.setId(p);
+            d3d.Initialize(this_shelf.boxes[p], offsettedDragline,p);
 
             // Make it so there is always at least a very small gap inw betwwen cubes
             cubes[p].GetComponent<BoxCollider>().size *= 1.05f;
-
         }
         
     }
 
-
     // Methods used by childs to check/clear collisions with other childs //
-
     public bool cubeIsColided(int cubeMoved)
     {
         Bounds cubeMovedBounds = cubes[cubeMoved].GetComponent<BoxCollider>().bounds;

@@ -8,48 +8,46 @@ using System;
 [Serializable]
 public class SceneGenerator : MonoBehaviour
 {
-    //store gameObject reference
-    GameObject objToSpawn;
 
     private SceneData sceneData;
-    public string dataJson = "data.json";
+    public string JSONPath = "data.json";
+    public bool AUTOSTART = false;
 
-    public List<Stand> stands;
+    public List<StandGenerator> stands;
 
     
     void Start()
     {
-        LoadShelfData();
+        JSONPath = Path.Combine(Application.streamingAssetsPath, JSONPath);
 
-        stands = new List<Stand>();
+        if (AUTOSTART)
+        {
+            GenerateScene(JSONPath);
+        }
+    }
+
+    public void GenerateScene(string JSONName)
+    {
+        LoadShelfData(JSONName);
+
+        stands = new List<StandGenerator>();
 
         for (int i = 0; i < sceneData.stands.Length; i++)
         {
             GameObject g = new GameObject(sceneData.stands[i].name);
             g.transform.SetParent(transform);
 
-            Stand STD = g.AddComponent(typeof(Stand)) as Stand;
-            stands.Add(STD);
+            StandGenerator STD = g.AddComponent(typeof(StandGenerator)) as StandGenerator;
             STD.Initialize(sceneData.stands[i]);
         }
-
-        GameObject UI = GameObject.Find("UIController");
-
-        // Link the UI cotroller to the stand objects
-        UIController uiController = UI.GetComponent<UIController>();
-        uiController.SetStandList(stands);
     }
 
-    private void LoadShelfData()
+    private void LoadShelfData(string JSONName)
     {
-        // Path.Combine combines strings into a file path
-        // Application.StreamingAssets points to Assets/StreamingAssets in the Editor, and the StreamingAssets folder in a build
-        string filePath = Path.Combine(Application.streamingAssetsPath, dataJson);
-
-        if (File.Exists(filePath))
+        if (File.Exists(JSONName))
         {
             // Read the json from the file into a string
-            string dataAsJson = File.ReadAllText(filePath);
+            string dataAsJson = File.ReadAllText(JSONName);
             // Pass the json to JsonUtility, and tell it to create a GameData object from it
             sceneData = JsonUtility.FromJson<SceneData>(dataAsJson);
         }
@@ -59,5 +57,17 @@ public class SceneGenerator : MonoBehaviour
         }
     }
     
+    public void RegisterChild(StandGenerator s)
+    {
+        if(stands == null)
+        {
+            stands = new List<StandGenerator>();
+        }
 
+        stands.Add(s);
+
+        GameObject UI = GameObject.Find("UIController");
+        UIController uiController = UI.GetComponent<UIController>();
+        uiController.SetStandList(stands);
+    }
 }

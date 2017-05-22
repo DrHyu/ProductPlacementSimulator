@@ -93,9 +93,7 @@
     <Compile Include="Assets\Scripts\Generators\MeshGenerator.cs" />
     <Compile Include="Assets\Scripts\Generators\SceneGenerator.cs" />
     <Compile Include="Assets\Scripts\Generators\ShelfGenerator.cs" />
-    <Compile Include="Assets\Scripts\Generators\Stand.cs" />
-    <Compile Include="Assets\Scripts\OldStuff\Drag.cs" />
-    <Compile Include="Assets\Scripts\OldStuff\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\Generators\StandGenerator.cs" />
     <Compile Include="Assets\Scripts\Triangulator.cs" />
     <Compile Include="Assets\Scripts\UIStuff\ButtonClickCallback.cs" />
     <Compile Include="Assets\Scripts\UIStuff\CallBackRegisterableClass.cs" />

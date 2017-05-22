@@ -8,8 +8,8 @@
 					"wall_x":[0,0,2,10],
 					"wall_y":[0,8,10,10],
 					"shelves":[
-						{"x_start":0,"y_start":2,"z_start":0,"x_points":[0,0,2,10,10,3,2,2],"y_points":[0,8,10,10,8,8,7,0],"front_index":[4,5,6,7], "thickness": 0.5},
-						{"x_start":0,"y_start":8,"z_start":0,"x_points":[0,0,2,10,10,3,2,2],"y_points":[0,8,10,10,8,8,7,0],"front_index":[4,5,6,7], "thickness": 0.5}
+						{"x_points":[0,0,2,10,10,3,2,2],"y_points":[0,8,10,10,8,8,7,0],"front_index":[4,5,6,7], "thickness": 0.5},
+						{"x_points":[0,0,2,10,10,3,2,2],"y_points":[0,8,10,10,8,8,7,0],"front_index":[4,5,6,7], "thickness": 0.5}
 					]
 				}
 	]

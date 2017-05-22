@@ -10,11 +10,13 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     // Index within array of cubes in parent objedt
     private int ID;
 
+    private BoxJSON this_box;
+
     private Color dragColor     = new Color(1,1,1,0.5f);
     private Color collidedColor = new Color(1, 0, 0, 0.5f);
     private Color collidedUponColor = new Color(0, 0, 1, 0.5f);
     private Color selectedColor = new Color(0, 1, 0, 0.5f);
-    private Color originalColor = Color.yellow;
+    private Color originalColor = new Color(1, 0.91f, 0.62f, 0.5f);
 
     // Used to keep state machine
     public bool selected = false;
@@ -25,8 +27,12 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     // Used to keep history of the last valid position and index to recover in case of a failed drag
     private Vector3 last_position;
     private int last_index = 0;
-    public int curent_index = 0;
-    private Vector3 startPos;
+
+    // The position of the cube is stored as:
+    //  1. Index of the vertex in the dragline
+    //  2. magnitude(current_3d_pos - dragLine[c_index])/ magnitude(dragLine[c_index+1] - dragLine[c_index])
+    // Stored this way to allow the stands to be rotated and/or scaled while maintaining the relative position of this cube
+
 
     private float distance;
 
@@ -44,20 +50,16 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     private void Start()
     {
-        startPos = GetComponent<Transform>().localPosition;
-
         // Make sure it is at the very start 
-        transform.localPosition = localDragLines[0];
         GetComponent<Renderer>().material.shader = Shader.Find("Transparent/Diffuse");
         GetComponent<Renderer>().material.color = originalColor;
 
-        last_position = localDragLines[0];
+        last_position = transform.localPosition;
     }
 
     void Update()
     {
 
-        // Check if the cbe has colided with another one
         if(dragging)
         {
             //Calcualte the estimaded mouse position in the 3D space
@@ -66,13 +68,11 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
             // Transform to local coordinates
             mousePos3D = transform.parent.InverseTransformPoint(mousePos3D);
-            //We don't care about the Y pos, since we will always be moving on a plane
-            //mousePos3D.y = startPos.y;
 
             int next_index;
             // Try the new position
-            transform.localPosition = getClosestPointInCurrentLine(mousePos3D, curent_index, out next_index);
-            curent_index = next_index;
+            transform.localPosition = getClosestPointInCurrentLine(mousePos3D, this_box.current_index, out next_index);
+            this_box.current_index = next_index;
 
             // Check if it colides with anything else on this new location
             if (GetComponentInParent<ShelfGenerator>().cubeIsColided(ID))
@@ -93,8 +93,14 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
                 updateColor();
 
                 // This are used to reover the last valid position if, for example, the user stops dragging a block during an intercception
-                last_index = curent_index;
+                last_index = this_box.current_index;
                 last_position = transform.localPosition;
+
+                // The position of the cube is stored as:
+                //  1. Index of the vertex in the dragline
+                //  2. magnitude(current_3d_pos - dragLine[c_index])/ magnitude(dragLine[c_index+1] - dragLine[c_index])
+                // Stored this way to allow the stands to be rotated and/or scaled while maintaining the relative position of this cube
+                this_box.current_pos_relative = Vector3.Magnitude(transform.localPosition - localDragLines[this_box.current_index]) / Vector3.Magnitude(localDragLines[this_box.current_index + 1] - localDragLines[this_box.current_index]);
             }
         }
 
@@ -127,7 +133,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     private void LateUpdate()
     {
-        Vector3 n = normals[curent_index].to3DwY(0);
+        Vector3 n = normals[this_box.current_index].to3DwY(0);
 
         transform.localRotation = Quaternion.LookRotation(n);
     }
@@ -139,7 +145,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         offsetDraglineByCubeSize();
         CalculateNormals();
 
-        transform.localPosition = localDragLines[curent_index];
+        transform.localPosition = localDragLines[this_box.current_index];
     }
 
     public void OnPointerUp(PointerEventData eventData)
@@ -149,7 +155,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
             // Notify that we are not longer in collision and cubes that are "collided upon" can reset to default state
             GetComponentInParent<ShelfGenerator>().clearCollision();
             transform.localPosition = last_position;
-            curent_index = last_index;
+            this_box.current_index = last_index;
             collided = false;
         }
         dragging = false;
@@ -163,27 +169,6 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         updateColor();
     }
 
-    //void OnMouseDown()
-    //{
-
-    //    distance = Vector3.Distance(GetComponent<Transform>().position, Camera.main.transform.position);
-    //    dragging = true;
-    //    updateColor();
-    //}
-
-    //void OnMouseUp()
-    //{
-    //    if (collided)
-    //    {
-    //        // Notify that we are not longer in collision and cubes that are "collided upon" can reset to default state
-    //        GetComponentInParent<ShelfGenerator>().clearCollision();
-    //        transform.localPosition = last_position;
-    //        curent_index = last_index;
-    //        collided = false;
-    //    }
-    //    dragging = false;
-    //    updateColor();
-    //}
 
     private void OnCollisionEnter(Collision c)
     {
@@ -282,6 +267,20 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
 
         
+    }
+
+    public void Initialize(BoxJSON b, Vector3[] _dragLines, int _ID)
+    {
+        this_box = b;
+        ID = _ID;
+
+        transform.localScale = new Vector3(b.width, b.height, b.depth);
+
+        globalDragLines = _dragLines;
+        offsetDraglineByCubeSize();
+        CalculateNormals();
+
+        transform.localPosition = localDragLines[this_box.current_index] + (localDragLines[this_box.current_index + 1] - localDragLines[this_box.current_index]) * this_box.current_pos_relative;
     }
 
     public void setId(int _ID)
