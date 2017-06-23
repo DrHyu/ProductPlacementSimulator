@@ -13,7 +13,7 @@ public class TextClickHandle : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        GetComponentInParent<TextScrollView>().TextWasClicked(ID);
+        GetComponentInParent<TextScrollView>().ProcessClick(ID);
     }
 
 }

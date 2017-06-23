@@ -8,9 +8,12 @@ public class CallBackRegisterableClass : MonoBehaviour {
 
     public delegate void ClickCallback();
     public delegate void IndexChangedCallback(int index);
+    public delegate void SelectedChangedCallback(bool[] selections);
 
     protected  List<ClickCallback> clickCallback;
-    protected List<IndexChangedCallback> indexChangedCallback;
+    protected  List<IndexChangedCallback> indexChangedCallback;
+    protected List<SelectedChangedCallback> selectedChangedCallback;
+
 
 
     public void RegisterClickCallback(ClickCallback f)
@@ -29,6 +32,15 @@ public class CallBackRegisterableClass : MonoBehaviour {
             indexChangedCallback = new List<IndexChangedCallback>();
         }
         indexChangedCallback.Add(f);
+    }
+
+    public void RegisterSelectedChangedCallback(SelectedChangedCallback f)
+    {
+        if (selectedChangedCallback == null)
+        {
+            selectedChangedCallback = new List<SelectedChangedCallback>();
+        }
+        selectedChangedCallback.Add(f);
     }
 
 }

@@ -37,7 +37,10 @@ public class ShelfJSON
 {
     public string name = "Shelf";
 
-    public float height;
+    [ShowOnly]
+    public float absolute_height;
+    //Relative to the previous shelf in the same stand
+    public float relative_height; 
 
     public float thickness = 0.2f;
 

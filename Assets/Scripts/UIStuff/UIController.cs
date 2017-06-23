@@ -13,13 +13,15 @@ public class UIController : MonoBehaviour {
 
     private List<StandGenerator> standList;
     private List<string> standNames;
-    public int standIndex;
-
+    private int stand_dropdown_index = 0;
     private List<string> shelfNames;
-    public int shelfIndex;
+    private int shelf_dropdown_index = 0;
 
     private List<string> boxNames;
     public int boxIndex = -1;
+    public bool[] boxIndexes;
+
+    private bool initialized = false;
 
     private GameObject scrollView;
 
@@ -32,13 +34,13 @@ public class UIController : MonoBehaviour {
             standNames.Add(standList[i].ToString());
         }
 
-        textscrollView.RegisterIndexChangedCallback(BoxSlectedIndexChanged);
+        textscrollView.RegisterSelectedChangedCallback(BoxSlectedIndexChanged);
         addButton.GetComponent<ButtonClickCallback>().RegisterClickCallback(OnAddButtonPressed);
         removeButton.GetComponent<ButtonClickCallback>().RegisterClickCallback(OnRemoveButoonPressed);
 
-        updateStandDropDown();
-        updateShelfDropDown();
-        updateBoxLister();
+        
+        SetProductSelectUIState(0, 0);
+        initialized = true;
     }
 
     public void SetStandList(List<StandGenerator> _standList)
@@ -49,39 +51,24 @@ public class UIController : MonoBehaviour {
 
     public void StandDropDownIndexChanged(int index)
     {
-        if (boxIndex != -1)
-        {
-            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().selected = false;
-            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().updateColor();
-        }
-
-        standIndex = index;
-        updateShelfDropDown();
+        SetProductSelectUIState(index);
     }
     public void ShelfDropDownIndexChanged(int index)
     {
-        if (boxIndex != -1)
-        {
-            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().selected = false;
-            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().updateColor();
-        }
-
-        shelfIndex = index;
-        updateBoxLister();
+        SetProductSelectUIState(stand_dropdown_index, index);
     }
-    public void BoxSlectedIndexChanged(int index)
+    public void BoxSlectedIndexChanged(bool[] selected)
     {
-        if (boxIndex != -1)
+        boxIndexes = selected;
+
+        for(int i =0; i < selected.Length; i++)
         {
-            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().selected = false;
-            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().updateColor();
+            standList[stand_dropdown_index].shelves[shelf_dropdown_index].cubes[i].GetComponent<Drag3D>().selected = selected[i];
+            standList[stand_dropdown_index].shelves[shelf_dropdown_index].cubes[i].GetComponent<Drag3D>().updateColor();
         }
-
-        standList[standIndex].shelves[shelfIndex].cubes[index].GetComponent<Drag3D>().selected = true;
-        standList[standIndex].shelves[shelfIndex].cubes[index].GetComponent<Drag3D>().updateColor();
-
-        boxIndex = index;
     }
+
+
 
     public void OnAddButtonPressed()
     {
@@ -90,11 +77,11 @@ public class UIController : MonoBehaviour {
 
     public void OnRemoveButoonPressed()
     {
-        if (standList[standIndex].shelves[shelfIndex].cubes[boxIndex] != null )
+        if (standList[stand_dropdown_index].shelves[shelf_dropdown_index].cubes[boxIndex] != null )
         {
-            GameObject.Destroy(standList[standIndex].shelves[shelfIndex].cubes[boxIndex]);
+            GameObject.Destroy(standList[stand_dropdown_index].shelves[shelf_dropdown_index].cubes[boxIndex]);
 
-            standList[standIndex].shelves[shelfIndex].cubes.RemoveAt(boxIndex);
+            standList[stand_dropdown_index].shelves[shelf_dropdown_index].cubes.RemoveAt(boxIndex);
             boxIndex--;
 
             // Clear and fill up again the txt scroll view
@@ -107,43 +94,77 @@ public class UIController : MonoBehaviour {
 
     private void updateStandDropDown()
     {
-        standDropDown.ClearOptions();
-        standDropDown.AddOptions(standNames);
-        standIndex = 0;
-    }
-    private void updateShelfDropDown()
-    {
-        shelfIndex = 0;
 
-        shelfNames = new List<string>();
-        for (int i = 0; i < standList[standIndex].shelves.Length; i++)
-        {
-            shelfNames.Add(standList[standIndex].shelves[i].name);
-        }
-
-        shelfDropDown.ClearOptions();
-        shelfDropDown.AddOptions(shelfNames);
     }
+
     private void updateBoxLister(bool resetIndex = true)
     {
         if (resetIndex) {
             boxIndex = -1;
         }
 
-        boxNames = new List<string>();
-        for (int i = 0; i < standList[standIndex].shelves[shelfIndex].cubes.Count; i++)
+
+
+    }
+
+
+
+
+    // Product select UI includes: stand dropdown, shelf dropdown and product selection text scrollview
+    private void SetProductSelectUIState(int stand_index = 0 , int shelf_index = 0, bool[] products_selected = null)
+    {
+
+        bool stand_index_changed = stand_index != stand_dropdown_index;
+        bool shelf_index_changed = shelf_index != shelf_dropdown_index;
+
+
+        // Clear boxes selected in the 3D representation
+        if (boxIndexes != null && initialized && (stand_index_changed || shelf_index_changed))
         {
-            boxNames.Add(standList[standIndex].shelves[shelfIndex].cubes[i].name);
+            for (int i = 0; i < boxIndexes.Length; i++)
+            {
+                standList[stand_dropdown_index].shelves[shelf_dropdown_index].cubes[i].GetComponent<Drag3D>().selected = false;
+                standList[stand_dropdown_index].shelves[shelf_dropdown_index].cubes[i].GetComponent<Drag3D>().updateColor();
+            }
+            boxIndexes = null;
         }
 
-        textscrollView.Clear();
-        textscrollView.AddText(boxNames);
 
-        if (boxIndex != -1)
+        if (!initialized)
         {
-            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().selected = true;
-            standList[standIndex].shelves[shelfIndex].cubes[boxIndex].GetComponent<Drag3D>().updateColor();
+            standDropDown.ClearOptions();
+            standDropDown.AddOptions(standNames);
+            standDropDown.value = stand_index;
         }
+        stand_dropdown_index = stand_index;
+
+        if (stand_index_changed || !initialized)
+        {
+            // Updathe the shelf dropdown to list the correct new shelf names
+            shelfNames = new List<string>();
+            for (int i = 0; i < standList[stand_index].shelves.Length; i++)
+            {
+                shelfNames.Add(standList[stand_index].shelves[i].name);
+            }
+
+            shelfDropDown.ClearOptions();
+            shelfDropDown.AddOptions(shelfNames);
+            shelf_dropdown_index = shelf_index;
+        }
+        if(stand_index_changed || shelf_index_changed || !initialized)
+        {
+            boxNames = new List<string>();
+            for (int i = 0; i < standList[stand_index].shelves[shelf_index].cubes.Count; i++)
+            {
+                boxNames.Add(standList[stand_index].shelves[shelf_index].cubes[i].name);
+            }
+
+            textscrollView.Clear();
+            textscrollView.AddText(boxNames);
+        }
+
+
+
     }
 
 }

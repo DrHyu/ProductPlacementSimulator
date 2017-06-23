@@ -22,7 +22,7 @@ public class ShelfGenerator : MonoBehaviour
 
         this_shelf = s;
 
-        transform.localPosition = new Vector3(0,s.height,0);
+        transform.localPosition = new Vector3(0,s.absolute_height,0);
         transform.localRotation = Quaternion.identity;
 
         // Generate new mesh game object
@@ -77,7 +77,7 @@ public class ShelfGenerator : MonoBehaviour
             {
                 this_shelf.boxes[p] = new BoxJSON();
                 this_shelf.boxes[p].current_index = 0;
-                this_shelf.boxes[p].current_pos_relative = 0;
+                this_shelf.boxes[p].current_pos_relative = UnityEngine.Random.value;
                 this_shelf.boxes[p].width = 0.5f + UnityEngine.Random.value * 2f;
                 this_shelf.boxes[p].height = 0.5f + UnityEngine.Random.value * 2f;
                 this_shelf.boxes[p].depth = 0.5f + UnityEngine.Random.value * 2f;
@@ -99,6 +99,11 @@ public class ShelfGenerator : MonoBehaviour
         }
         
     }
+
+
+    // What we want is to "flatten out" all the draglines in a shelf into a line representing the entire length of the dragable space 
+
+
 
     // Methods used by childs to check/clear collisions with other childs //
     public bool cubeIsColided(int cubeMoved)

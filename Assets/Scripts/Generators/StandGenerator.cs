@@ -14,10 +14,14 @@ public class StandGenerator : MonoBehaviour
 
     public StandJSON this_stand;
 
+    public Vector3 move_increment;
+
     private bool initialized = false;
 
     private void Start()
     {
+        move_increment = Vector3.zero;
+
         transform.parent.gameObject.GetComponent<SceneGenerator>().RegisterChild(this);
 
         if (!initialized)
@@ -45,6 +49,8 @@ public class StandGenerator : MonoBehaviour
 
         shelves = new ShelfGenerator[s.shelves.Length];
 
+        float current_height = 0;
+
         for (int i = 0; i < s.shelves.Length; i++)
         {
             GameObject g = new GameObject("shelf " + i);
@@ -52,6 +58,9 @@ public class StandGenerator : MonoBehaviour
             ShelfGenerator SHG = g.AddComponent(typeof(ShelfGenerator)) as ShelfGenerator;
 
             SHG.transform.SetParent(transform);
+
+            current_height += s.shelves[i].relative_height;
+            s.shelves[i].absolute_height = current_height;
             SHG.Initialize(s.shelves[i]);
 
             shelves[i] = SHG;
@@ -74,7 +83,13 @@ public class StandGenerator : MonoBehaviour
 
         wall_obj = new GameObject[this_stand.shelves.Length];
 
-        float highest_y = this_stand.shelves[this_stand.shelves.Length - 1].height;
+        float highest_y = 0;
+
+        for (int i = 0; i < this_stand.shelves.Length; i++)
+        {
+            highest_y += this_stand.shelves[i].relative_height;
+        }
+
         if (wall != null)
         {
             for (int i = 0; i < wall.Length - 1; i++)
@@ -116,6 +131,16 @@ public class StandGenerator : MonoBehaviour
 
     private void OnValidate()
     {
+
+        if(move_increment != Vector3.zero)
+        {
+            //transform.localPosition += move_increment;
+            this_stand.x_start += move_increment.x;
+            this_stand.y_start += move_increment.y;
+            this_stand.z_start += move_increment.z;
+            move_increment = Vector3.zero;
+        }
+
         // Redraw evcerything
         if (wall_obj != null)
         {

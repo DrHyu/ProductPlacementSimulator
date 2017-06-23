@@ -141,7 +141,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     public void OnValidate()
     {
         
-        // Re-calulate the local drag lines based on the new scale of th object
+        // Re-calulate the local drag lines based on the new scale of the object
         offsetDraglineByCubeSize();
         CalculateNormals();
 
