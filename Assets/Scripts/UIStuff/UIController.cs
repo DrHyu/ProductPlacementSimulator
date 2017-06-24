@@ -133,6 +133,7 @@ public class UIController : MonoBehaviour {
             shelfDropDown.ClearOptions();
             shelfDropDown.AddOptions(shelfNames);
             shelf_dropdown_index = shelf_index;
+            shelfDropDown.value = shelf_index;
         }
         if(stand_index_changed || shelf_index_changed || !initialized)
         {
@@ -145,10 +146,8 @@ public class UIController : MonoBehaviour {
             textscrollView.Clear();
             textscrollView.AddText(boxNames);
             shelf_dropdown_index = shelf_index;
+            shelfDropDown.value = shelf_index;
+
         }
-
-
-
     }
-
 }
