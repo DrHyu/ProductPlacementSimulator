@@ -11,10 +11,8 @@ public class ShelfGenerator : MonoBehaviour
 
     public ShelfJSON this_shelf;
 
-    private void Start()
-    {
-        
-    }
+    private GameObject shelf_mesh;
+    public Boolean selected = false;
 
     public void Initialize(ShelfJSON s)
     {
@@ -26,22 +24,22 @@ public class ShelfGenerator : MonoBehaviour
         transform.localRotation = Quaternion.identity;
 
         // Generate new mesh game object
-        GameObject mesh_object = new GameObject("mesh");
+        shelf_mesh = new GameObject("mesh");
 
         // Calculate the mesh from the raw data
         MeshGenerator meshGen = new MeshGenerator(s.x_points, s.y_points);
         Mesh msh = meshGen.get3DMeshFrom2D(-s.thickness);
 
         // Render the mesh
-        mesh_object.AddComponent(typeof(MeshRenderer));
-        MeshFilter meshRenderer = mesh_object.AddComponent(typeof(MeshFilter)) as MeshFilter;
+        shelf_mesh.AddComponent(typeof(MeshRenderer));
+        MeshFilter meshRenderer = shelf_mesh.AddComponent(typeof(MeshFilter)) as MeshFilter;
         meshRenderer.mesh = msh;
 
-        mesh_object.GetComponent<Renderer>().material.color = Color.white;
-        mesh_object.GetComponent<Transform>().localScale = new Vector3(1, 1, 1);
-        mesh_object.GetComponent<Transform>().SetParent(transform);
-        mesh_object.GetComponent<Transform>().localPosition = new Vector3(0, 0, 0);
-        mesh_object.GetComponent<Transform>().localRotation = Quaternion.identity;
+        shelf_mesh.GetComponent<Renderer>().material.color = Color.white;
+        shelf_mesh.GetComponent<Transform>().localScale = new Vector3(1, 1, 1);
+        shelf_mesh.GetComponent<Transform>().SetParent(transform);
+        shelf_mesh.GetComponent<Transform>().localPosition = new Vector3(0, 0, 0);
+        shelf_mesh.GetComponent<Transform>().localRotation = Quaternion.identity;
 
         // Calculate the the points that belong to the front face of the shelf
         // If none ar given, they are all front face by default
@@ -100,10 +98,19 @@ public class ShelfGenerator : MonoBehaviour
         
     }
 
+    public void UpdateColor()
+    {
+        if (selected)
+        {
+            shelf_mesh.GetComponent<Renderer>().material.color = new Color(0.4f, 1f, 0.8f);
+        }
+        else
+        {
+            shelf_mesh.GetComponent<Renderer>().material.color = Color.white;
+        }
+    }
 
     // What we want is to "flatten out" all the draglines in a shelf into a line representing the entire length of the dragable space 
-
-
 
     // Methods used by childs to check/clear collisions with other childs //
     public bool cubeIsColided(int cubeMoved)

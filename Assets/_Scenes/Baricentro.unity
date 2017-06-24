@@ -3989,9 +3989,8 @@ MonoBehaviour:
   textscrollView: {fileID: 118498600}
   addButton: {fileID: 1057615844}
   removeButton: {fileID: 1619169776}
-  standIndex: 0
-  shelfIndex: 0
   boxIndex: 0
+  boxIndexes: 
 --- !u!1 &2030634658
 GameObject:
   m_ObjectHideFlags: 0
