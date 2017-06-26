@@ -23,6 +23,7 @@ public class UIController : MonoBehaviour {
     public int boxIndex = -1;
     public bool[] boxIndexes;
 
+    private bool callbacksSet = false;
     private bool initialized = false;
 
     public void Initialize()
@@ -33,10 +34,15 @@ public class UIController : MonoBehaviour {
         {
             standNames.Add(standList[i].ToString());
         }
-
-        textscrollView.RegisterSelectedChangedCallback(BoxSlectedIndexChanged);
-        addButton.GetComponent<ButtonClickCallback>().RegisterClickCallback(OnAddButtonPressed);
-        removeButton.GetComponent<ButtonClickCallback>().RegisterClickCallback(OnRemoveButoonPressed);
+        
+        //TODO Crappy fix
+        if (!callbacksSet)
+        {
+            textscrollView.RegisterSelectedChangedCallback(BoxSlectedIndexChanged);
+            addButton.GetComponent<ButtonClickCallback>().RegisterClickCallback(OnAddButtonPressed);
+            removeButton.GetComponent<ButtonClickCallback>().RegisterClickCallback(OnRemoveButoonPressed);
+            callbacksSet = true;
+        }
 
         
         UpdateUIState(0, 0);
@@ -75,17 +81,22 @@ public class UIController : MonoBehaviour {
 
     public void OnRemoveButoonPressed()
     {
-        if (standList[stand_dropdown_index].shelves[shelf_dropdown_index].cubes[boxIndex] != null )
+        if (boxIndexes != null)
         {
-            GameObject.Destroy(standList[stand_dropdown_index].shelves[shelf_dropdown_index].cubes[boxIndex]);
 
-            standList[stand_dropdown_index].shelves[shelf_dropdown_index].cubes.RemoveAt(boxIndex);
-            boxIndex--;
+            _UItoSimulation.UISelectionChanged(stand_dropdown_index, shelf_dropdown_index, null);
 
-            // Clear and fill up again the txt scroll view
-            // Keep the same id 
-            updateBoxLister(false);
+            // Remove the products from the datastructure
+            _UItoSimulation.RemoveProducts(stand_dropdown_index, shelf_dropdown_index, boxIndexes);
+
+            boxIndexes = null;
+
+            // Redraw UI
+            initialized = false;
+            UpdateUIState(stand_dropdown_index, shelf_dropdown_index, null);
         }
+            
+
     }
 
     private void updateStandDropDown()

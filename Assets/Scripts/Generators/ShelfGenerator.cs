@@ -14,6 +14,8 @@ public class ShelfGenerator : MonoBehaviour
     private GameObject shelf_mesh;
     public Boolean selected = false;
 
+    private Dictionary<int, int> child_id_to_child_order;
+
     public void Initialize(ShelfJSON s)
     {
         name = s.name;
@@ -113,14 +115,12 @@ public class ShelfGenerator : MonoBehaviour
     // What we want is to "flatten out" all the draglines in a shelf into a line representing the entire length of the dragable space 
 
     // Methods used by childs to check/clear collisions with other childs //
-    public bool cubeIsColided(int cubeMoved)
+    public bool CubeIsColided(Bounds cubeMovedBounds, int insanceID)
     {
-        Bounds cubeMovedBounds = cubes[cubeMoved].GetComponent<BoxCollider>().bounds;
-
         bool colision_happened = false;
         for (int i = 0; i < cubes.Count; i++)
         {
-            if (i == cubeMoved) { continue; }
+            if (cubes[i].GetInstanceID() == insanceID) { continue; }
 
             if (cubes[i].GetComponent<BoxCollider>().bounds.Intersects(cubeMovedBounds))
             {

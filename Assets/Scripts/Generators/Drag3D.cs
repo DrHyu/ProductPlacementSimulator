@@ -75,7 +75,8 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
             this_box.current_index = next_index;
 
             // Check if it colides with anything else on this new location
-            if (GetComponentInParent<ShelfGenerator>().cubeIsColided(ID))
+            if (GetComponentInParent<ShelfGenerator>().CubeIsColided(
+                    gameObject.GetComponent<BoxCollider>().bounds, gameObject.GetInstanceID()))
             {
                 collided = true;
                 updateColor();
@@ -238,6 +239,14 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     }
 
     /* - - - - - NON-STATIC METHODS - - - - - */
+
+    public void PrepareForDelete()
+    {
+        if (collided)
+        {
+
+        }
+    }
 
     private void findNextEmptySpace(GameObject other_cube)
     {

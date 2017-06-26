@@ -54,6 +54,22 @@ public class UItoSimulation : MonoBehaviour
         product_sel = product_index;
     }
     
+    
+    public void RemoveProducts(int stand_i, int shelf_i, bool[] to_remove)
+    {
+        int p = 0;
+        for (int i = 0; i < to_remove.Length; i++)
+        {   
+            if (to_remove[i])
+            {
+                GameObject.Destroy(standList[stand_i].shelves[shelf_i].cubes[p]);
+                standList[stand_i].shelves[shelf_i].cubes.RemoveAt(p);
+                p--;
+            }
+            p++;
+        }
+    }
+
     public void Initialize(List<StandGenerator> sg)
     {
         standList = sg;
