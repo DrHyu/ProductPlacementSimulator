@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEditor;
 using System.Collections.Generic;
 using System;
 
@@ -8,6 +7,7 @@ public class ShelfGenerator : MonoBehaviour
 {
     public int n_cubes;
     public List<GameObject> cubes;
+    public List<BoxJSON> productList;
 
     public ShelfJSON this_shelf;
 
@@ -37,6 +37,7 @@ public class ShelfGenerator : MonoBehaviour
         MeshFilter meshRenderer = shelf_mesh.AddComponent(typeof(MeshFilter)) as MeshFilter;
         meshRenderer.mesh = msh;
 
+        shelf_mesh.GetComponent<Renderer>().material = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
         shelf_mesh.GetComponent<Renderer>().material.color = Color.white;
         shelf_mesh.GetComponent<Transform>().localScale = new Vector3(1, 1, 1);
         shelf_mesh.GetComponent<Transform>().SetParent(transform);
@@ -66,39 +67,13 @@ public class ShelfGenerator : MonoBehaviour
         int[] vertexR;
         offsettedDragline = Drag3D.CalculateDragLines(dragline, 0.2f, out vertexR, false);
 
-        // Make some dummy boxes if none available
-        //if(this_shelf.boxes == null || this_shelf.boxes.Length == 0)
-        //{
-        //    // Add the products to the shelf
-        //    n_cubes = 1 + (int)(UnityEngine.Random.value * 5);
-        //    this_shelf.boxes = new BoxJSON[n_cubes];
-
-        //    for (int p = 0; p < n_cubes; p++)
-        //    {
-        //        this_shelf.boxes[p] = new BoxJSON();
-        //        this_shelf.boxes[p].current_index = 0;
-        //        this_shelf.boxes[p].current_pos_relative = UnityEngine.Random.value;
-        //        this_shelf.boxes[p].width = 0.5f + UnityEngine.Random.value * 2f;
-        //        this_shelf.boxes[p].height = 0.5f + UnityEngine.Random.value * 2f;
-        //        this_shelf.boxes[p].depth = 0.5f + UnityEngine.Random.value * 2f;
-        //    }
-        //}
-
-        cubes = new List<GameObject>();
+        cubes       = new List<GameObject>();
+        productList = new List<BoxJSON>();
 
         if (this_shelf.boxes != null)
         {
             for (int p = 0; p < this_shelf.boxes.Length; p++)
             {
-                //cubes.Add(GameObject.CreatePrimitive(PrimitiveType.Cube));
-                //cubes[p].transform.SetParent(transform);
-
-                //Drag3D d3d = cubes[p].AddComponent(typeof(Drag3D)) as Drag3D;
-                //d3d.Initialize(this_shelf.boxes[p], offsettedDragline, p);
-
-                //// Make it so there is always at least a very small gap inw betwwen cubes
-                //cubes[p].GetComponent<BoxCollider>().size *= 1.05f;
-
                 GenerateProduct(this_shelf.boxes[p]);
             }
         }
@@ -111,6 +86,7 @@ public class ShelfGenerator : MonoBehaviour
         GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         go.name = box.name;
         cubes.Add(go);
+        productList.Add(box);
         go.transform.SetParent(transform);
 
         Drag3D d3d = go.AddComponent(typeof(Drag3D)) as Drag3D;
@@ -124,13 +100,14 @@ public class ShelfGenerator : MonoBehaviour
 
     public void UpdateColor()
     {
+        float alpha = shelf_mesh.GetComponent<Renderer>().material.color.a;
         if (selected)
         {
-            shelf_mesh.GetComponent<Renderer>().material.color = new Color(0.4f, 1f, 0.8f);
+            shelf_mesh.GetComponent<Renderer>().material.color = new Color(0.4f, 1f, 0.8f, alpha);
         }
         else
         {
-            shelf_mesh.GetComponent<Renderer>().material.color = Color.white;
+            shelf_mesh.GetComponent<Renderer>().material.color = new Color(1f, 1f, 1f, alpha);
         }
     }
 

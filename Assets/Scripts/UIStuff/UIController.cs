@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Text.RegularExpressions;
+using System.IO;
+
 
 public class UIController : MonoBehaviour {
 
@@ -51,7 +53,7 @@ public class UIController : MonoBehaviour {
         {
             productListerView.RegisterSelectedChangedCallback(BoxSlectedIndexChanged);
             addButton.GetComponent<ButtonClickCallback>().RegisterClickCallback(OnAddButtonPressed);
-            removeButton.GetComponent<ButtonClickCallback>().RegisterClickCallback(OnRemoveButoonPressed);
+            removeButton.GetComponent<ButtonClickCallback>().RegisterClickCallback(OnRemoveButonPressed);
             callbacksSet = true;
         }
 
@@ -80,8 +82,14 @@ public class UIController : MonoBehaviour {
     {
         if (Input.GetKey(KeyCode.Delete))
         {
-            OnRemoveButoonPressed();
+            OnRemoveButonPressed();
         }
+
+
+        if (Input.GetKey("escape")) {
+            OnExitApplication();
+        }
+
     }
 
     public void SetStandList(List<StandGenerator> _standList)
@@ -98,6 +106,7 @@ public class UIController : MonoBehaviour {
     public void StandDropDownIndexChanged(int index)
     {
         UpdateUIState(index);
+
     }
 
     public void ShelfDropDownIndexChanged(int index)
@@ -133,7 +142,7 @@ public class UIController : MonoBehaviour {
         UpdateUIState(stand_dropdown_index, shelf_dropdown_index, productIndexes);
     }
 
-    public void OnRemoveButoonPressed()
+    public void OnRemoveButonPressed()
     {
         if (productIndexes != null && productIndexes.Length > 0)
         {
@@ -166,10 +175,49 @@ public class UIController : MonoBehaviour {
         DBListerView.SearchFunction(regex);
     }
 
+    // How to view the non-selected elements //
+
+    public Button ViewAllButton;
+    public Button AlphaChangeButton;
+    public Button ViewNoneButton;
+
+    public void OnViewAllButtonPressed()
+    {
+        ViewAllButton.interactable = false;
+        AlphaChangeButton.interactable = true;
+        ViewNoneButton.interactable = true;
+
+        _UItoSimulation.ChangeViewMode(UItoSimulation.ALPHA_CHANGE);
+    }
+
+    public void OnAlphaChangeButtonPressed()
+    {
+        ViewAllButton.interactable = true;
+        AlphaChangeButton.interactable = false;
+        ViewNoneButton.interactable = true;
+
+        _UItoSimulation.ChangeViewMode(UItoSimulation.NO_CHANGE);
+    }
+
+    public void OnViewNoneButtonPressed()
+    {
+        ViewAllButton.interactable = true;
+        AlphaChangeButton.interactable = true;
+        ViewNoneButton.interactable = false;
+
+        _UItoSimulation.ChangeViewMode(UItoSimulation.ACTIVE_CHANGE);
+    }
+
+    public void OnExitApplication()
+    {
+        SaveToJSON();
+        Application.Quit();
+    }
+
     // -----------------------------------------------------------------------------//
 
 
-    // Product select UI includes: stand dropdown, shelf dropdown and product selection text scrollview
+    // Product select UI includes: stand dropdown, shelf dropdown and product selection text scrollview //
     private void UpdateUIState(int stand_index = 0 , int shelf_index = 0, bool[] products_selected = null)
     {
 
@@ -219,5 +267,38 @@ public class UIController : MonoBehaviour {
         {
             productListerView.SetSelected(products_selected);
         }
+    }
+
+
+
+    // Save to file logic //
+    private void SaveToJSON()
+    {
+        // Path.Combine combines strings into a file path
+        // Application.StreamingAssets points to Assets/StreamingAssets in the Editor, and the StreamingAssets folder in a build
+        string filePath = Path.Combine(Application.streamingAssetsPath, "FarmaciaBaricentro.json");
+        SceneData sd = FromSceneToJSON(standList);
+        string json_data = JsonUtility.ToJson(sd);
+        File.WriteAllText(filePath, json_data);
+    }
+
+    private SceneData FromSceneToJSON(List<StandGenerator> s)
+    {
+        StandJSON[] outData = new StandJSON[s.Count];
+
+        for (int st = 0; st < s.Count; st++)
+        {
+            outData[st] = s[st].this_stand;
+
+            for (int sh = 0; sh < s[st].shelves.Length; sh++)
+            {
+                // Each shelf has 1 array with the product data that was extracted from the JSON 
+                // it also has 1 array list which is the one used and updated
+                // TODO this is so confusing, it should be reworked
+                outData[st].shelves[sh].boxes = s[st].shelves[sh].productList.ToArray();
+            }
+
+        }
+        return new SceneData(outData);
     }
 }

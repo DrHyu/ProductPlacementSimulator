@@ -69,7 +69,6 @@ public class maxCamera : MonoBehaviour
         // If Control and Alt and Middle button? ZOOM!
         //if (Input.GetMouseButton(2) && Input.GetKey(KeyCode.LeftAlt) && Input.GetKey(KeyCode.LeftControl))
         if (Input.GetMouseButton(1) && Input.GetKey(KeyCode.LeftAlt) && Input.GetKey(KeyCode.LeftControl))
-
         {
             desiredDistance -= Input.GetAxis("Mouse Y") * Time.deltaTime * zoomRate * 0.125f * Mathf.Abs(desiredDistance);
         }

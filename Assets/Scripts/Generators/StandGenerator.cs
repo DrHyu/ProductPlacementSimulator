@@ -1,25 +1,34 @@
 ﻿using UnityEngine;
-using UnityEditor;
-using System.Collections.Generic;
 using System;
 
 [Serializable]
 public class StandGenerator : MonoBehaviour
 {
-
     private Vector2[] wall;
     private GameObject[] wall_obj;
 
     public ShelfGenerator[] shelves;
-
     public StandJSON this_stand;
-
     public Vector3 move_increment;
+
+    public bool selected = false;
 
     private bool initialized = false;
 
+    private Material transparent_m;
+    private Material nonTransparent_m;
+
+    public int ViewMode = UItoSimulation.ALPHA_CHANGE;
+
+
     private void Start()
     {
+        // Load materials just once;
+        transparent_m    = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
+        nonTransparent_m = Resources.Load("Materials/StandardNonTransparent", typeof(Material)) as Material;
+
+        UpdateColor();
+
         move_increment = Vector3.zero;
 
         transform.parent.gameObject.GetComponent<SceneGenerator>().RegisterChild(this);
@@ -72,10 +81,11 @@ public class StandGenerator : MonoBehaviour
             wall[i] = new Vector2(s.wall_x[i], s.wall_y[i]);
         }
 
-        addWalls();
+        AddWalls();
+        //UpdateColor();
      }
 
-    private void addWalls()
+    private void AddWalls()
     {
         //Draw the backpanels
         //float lowest_y = this_stand.shelves[0].y_start;
@@ -95,6 +105,7 @@ public class StandGenerator : MonoBehaviour
             for (int i = 0; i < wall.Length - 1; i++)
             {
                 GameObject w = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                w.GetComponent<Renderer>().material.color = Color.white;
                 w.name = "Wall " + i;
 
                 Vector2 v = wall[i + 1] - wall[i];
@@ -199,5 +210,45 @@ public class StandGenerator : MonoBehaviour
         float height = biggest_y - smallest_y;
 
         return new Vector2(smallest_x + width / 2, smallest_y + height / 2);
+    }
+
+    public void UpdateColor()
+    {
+        if (selected)
+        {
+            // Set the Alpha to high on child objects
+            SetAlphaRecursively(transform, 1f, nonTransparent_m);
+        }
+        else
+        {
+            if (ViewMode == UItoSimulation.ALPHA_CHANGE)
+            {
+                // Set the Alpha to low on child objects
+                SetAlphaRecursively(transform, 0.1f, transparent_m);
+            }
+            else
+            {
+                // Set the Alpha to low on child objects
+                SetAlphaRecursively(transform, 1f, nonTransparent_m);
+            }
+
+        }
+    }
+
+    private void SetAlphaRecursively(Transform t, float a, Material m)
+    {
+        foreach(Transform child in t)
+        {
+            SetAlphaRecursively(child, a, m);
+
+            if (child.GetComponent<Renderer>() != null)
+            {
+                Color c = child.GetComponent<Renderer>().material.color;
+                c.a = a;
+                child.GetComponent<Renderer>().material = m;
+                child.GetComponent<Renderer>().material.color = c;
+
+            }
+        }
     }
 }

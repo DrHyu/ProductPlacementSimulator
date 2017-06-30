@@ -51,7 +51,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     private void Start()
     {
         // Make sure it is at the very start 
-        GetComponent<Renderer>().material.shader = Shader.Find("Transparent/Diffuse");
+        GetComponent<Renderer>().material  = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
         GetComponent<Renderer>().material.color = originalColor;
 
         last_position = transform.localPosition;
@@ -169,7 +169,6 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         dragging = true;
         updateColor();
     }
-
 
     private void OnCollisionEnter(Collision c)
     {

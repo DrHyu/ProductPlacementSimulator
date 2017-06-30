@@ -15,6 +15,7 @@ public class UItoSimulation : MonoBehaviour
     private int shelf_sel = 0;
     private bool[] product_sel;
 
+    private int view_mode = ALPHA_CHANGE;
 
     // This method should be called everytime the UI has changed it's selection so the simulation can update the selection accordingly
     public void UISelectionChanged(int stand_index =0, int shelf_index =0, bool[] product_index = null)
@@ -30,11 +31,24 @@ public class UItoSimulation : MonoBehaviour
         }
 
         // Clear any previously selected stands
+        standList[stand_sel].selected = false;
+        standList[stand_sel].UpdateColor();
+        if(view_mode == ACTIVE_CHANGE)
+        {
+            standList[stand_sel].gameObject.SetActive(false);
+        }
 
         // Clear any previously selected shelfs
         standList[stand_sel].shelves[shelf_sel].selected = false;
         standList[stand_sel].shelves[shelf_sel].UpdateColor();
 
+        // Highlight the selected stand
+        standList[stand_index].selected = true;
+        standList[stand_index].UpdateColor();
+        if (view_mode == ACTIVE_CHANGE)
+        {
+            standList[stand_index].gameObject.SetActive(true);
+        }
 
         // Highlight the shelf if no product is selected
         standList[stand_index].shelves[shelf_index].selected = true;
@@ -55,7 +69,44 @@ public class UItoSimulation : MonoBehaviour
         shelf_sel = shelf_index;
         product_sel = product_index;
     }
-    
+
+
+    public const int ALPHA_CHANGE  = 0;
+    public const int NO_CHANGE     = 1;
+    public const int ACTIVE_CHANGE = 2;
+
+    public void ChangeViewMode(int v_mode)
+    {
+        view_mode = v_mode;
+        switch (view_mode)
+        {
+            case ALPHA_CHANGE:
+                // Make sure all the stands are active
+                for(int i = 0; i < standList.Count; i++)
+                {
+                    standList[i].gameObject.SetActive(true);
+                    standList[i].ViewMode = ALPHA_CHANGE;
+                    standList[i].UpdateColor();
+                }
+                break;
+            case NO_CHANGE:
+                for(int i = 0; i < standList.Count; i++)
+                {
+                    standList[i].gameObject.SetActive(true);
+                    standList[i].ViewMode = NO_CHANGE;
+                    standList[i].UpdateColor();
+                }
+                break;
+            case ACTIVE_CHANGE:
+                for (int i = 0; i < standList.Count; i++)
+                {
+                    standList[i].gameObject.SetActive(i == stand_sel);
+                }
+                break;
+            default:
+                break;
+        }
+    }
     
     public void RemoveProducts(int stand_i, int shelf_i, bool[] to_remove)
     {
@@ -66,6 +117,7 @@ public class UItoSimulation : MonoBehaviour
             {
                 GameObject.Destroy(standList[stand_i].shelves[shelf_i].cubes[p]);
                 standList[stand_i].shelves[shelf_i].cubes.RemoveAt(p);
+                standList[stand_i].shelves[shelf_i].productList.RemoveAt(p);
                 p--;
             }
             p++;
@@ -74,13 +126,6 @@ public class UItoSimulation : MonoBehaviour
 
     public void AddProduct(int stand_i, int shelf_i, int db_ref)
     {
-        // TODO should use a db_ref rather thank making up random data
-        //BoxJSON box = new BoxJSON();
-        //box.current_index = 0;
-        //box.current_pos_relative = UnityEngine.Random.value;
-        //box.width = 0.5f + UnityEngine.Random.value * 2f;
-        //box.height = 0.5f + UnityEngine.Random.value * 2f;
-        //box.depth = 0.5f + UnityEngine.Random.value * 2f;
 
         DBItem ref_item = null;
         for(int i =0; i < dbh.db.contents.Length; i++)
@@ -101,7 +146,6 @@ public class UItoSimulation : MonoBehaviour
             Debug.LogError("Item not found in database!");
         }
     }
-
 
     public void Initialize(List<StandGenerator> sg)
     {

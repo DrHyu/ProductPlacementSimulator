@@ -18,10 +18,34 @@
 				},
 				{
 					"ID": 3,
-					"name": "Shampoo",
+					"name": "Champu XYZ",
 					"width": 0.5,
 					"height": 1.5,
 					"depth": 0.5,
+					"img_path": ""
+				},
+				{
+					"ID": 4,
+					"name": "Blevit plus 600 gr",
+					"width": 2.0,
+					"height": 2.8,
+					"depth": 1.0,
+					"img_path": ""
+				},
+				{
+					"ID": 5,
+					"name": "Oral B Prof. Care 2500",
+					"width": 1.5,
+					"height": 2.0,
+					"depth": 1.0,
+					"img_path": ""
+				},
+				{
+					"ID": 6,
+					"name": "Dodot Activity 62 ud",
+					"width": 3.0,
+					"height": 4.0,
+					"depth": 2.0,
 					"img_path": ""
 				}
 	]
