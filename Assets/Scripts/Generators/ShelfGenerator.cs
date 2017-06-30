@@ -14,7 +14,7 @@ public class ShelfGenerator : MonoBehaviour
     private GameObject shelf_mesh;
     public Boolean selected = false;
 
-    private Dictionary<int, int> child_id_to_child_order;
+    private Vector3[] offsettedDragline;
 
     public void Initialize(ShelfJSON s)
     {
@@ -64,40 +64,62 @@ public class ShelfGenerator : MonoBehaviour
         }
 
         int[] vertexR;
-        Vector3[] offsettedDragline = Drag3D.CalculateDragLines(dragline, 0.2f, out vertexR, false);
+        offsettedDragline = Drag3D.CalculateDragLines(dragline, 0.2f, out vertexR, false);
 
         // Make some dummy boxes if none available
-        if(this_shelf.boxes == null || this_shelf.boxes.Length == 0)
-        {
-            // Add the products to the shelf
-            n_cubes = 1 + (int)(UnityEngine.Random.value * 5);
-            this_shelf.boxes = new BoxJSON[n_cubes];
+        //if(this_shelf.boxes == null || this_shelf.boxes.Length == 0)
+        //{
+        //    // Add the products to the shelf
+        //    n_cubes = 1 + (int)(UnityEngine.Random.value * 5);
+        //    this_shelf.boxes = new BoxJSON[n_cubes];
 
-            for (int p = 0; p < n_cubes; p++)
-            {
-                this_shelf.boxes[p] = new BoxJSON();
-                this_shelf.boxes[p].current_index = 0;
-                this_shelf.boxes[p].current_pos_relative = UnityEngine.Random.value;
-                this_shelf.boxes[p].width = 0.5f + UnityEngine.Random.value * 2f;
-                this_shelf.boxes[p].height = 0.5f + UnityEngine.Random.value * 2f;
-                this_shelf.boxes[p].depth = 0.5f + UnityEngine.Random.value * 2f;
-            }
-        }
+        //    for (int p = 0; p < n_cubes; p++)
+        //    {
+        //        this_shelf.boxes[p] = new BoxJSON();
+        //        this_shelf.boxes[p].current_index = 0;
+        //        this_shelf.boxes[p].current_pos_relative = UnityEngine.Random.value;
+        //        this_shelf.boxes[p].width = 0.5f + UnityEngine.Random.value * 2f;
+        //        this_shelf.boxes[p].height = 0.5f + UnityEngine.Random.value * 2f;
+        //        this_shelf.boxes[p].depth = 0.5f + UnityEngine.Random.value * 2f;
+        //    }
+        //}
 
         cubes = new List<GameObject>();
 
-        for (int p = 0; p < this_shelf.boxes.Length; p++)
+        if (this_shelf.boxes != null)
         {
-            cubes.Add(GameObject.CreatePrimitive(PrimitiveType.Cube));
-            cubes[p].transform.SetParent(transform);
+            for (int p = 0; p < this_shelf.boxes.Length; p++)
+            {
+                //cubes.Add(GameObject.CreatePrimitive(PrimitiveType.Cube));
+                //cubes[p].transform.SetParent(transform);
 
-            Drag3D d3d = cubes[p].AddComponent(typeof(Drag3D)) as Drag3D;
-            d3d.Initialize(this_shelf.boxes[p], offsettedDragline,p);
+                //Drag3D d3d = cubes[p].AddComponent(typeof(Drag3D)) as Drag3D;
+                //d3d.Initialize(this_shelf.boxes[p], offsettedDragline, p);
 
-            // Make it so there is always at least a very small gap inw betwwen cubes
-            cubes[p].GetComponent<BoxCollider>().size *= 1.05f;
+                //// Make it so there is always at least a very small gap inw betwwen cubes
+                //cubes[p].GetComponent<BoxCollider>().size *= 1.05f;
+
+                GenerateProduct(this_shelf.boxes[p]);
+            }
         }
         
+    }
+
+    public void GenerateProduct(BoxJSON box)
+    {
+        // TODO: Need to actually edit the boxes array
+        GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.name = box.name;
+        cubes.Add(go);
+        go.transform.SetParent(transform);
+
+        Drag3D d3d = go.AddComponent(typeof(Drag3D)) as Drag3D;
+        // TODO Child ID needs to be revised
+        d3d.Initialize(box, offsettedDragline, cubes.Count - 1);
+
+        // Make it so there is always at least a very small gap in betwwen cubes
+        go.GetComponent<BoxCollider>().size *= 1.05f;
+
     }
 
     public void UpdateColor()

@@ -53,20 +53,20 @@ public class ShelfJSON
 }
 
 [Serializable]
-public class BoxJSON
+public class BoxJSON : DBItem
 {
-    public string name = "Box";
+    public BoxJSON(DBItem ref_item)
+    {
+        this.width = ref_item.width;
+        this.height = ref_item.height;
+        this.depth = ref_item.depth;
 
-    // Dimensions of the product
-    public float width;
-    public float height;
-    public float depth;
+        this.name = ref_item.name;
+        this.img_path = ref_item.img_path;
+    }
 
     public int current_index;
     public float current_pos_relative;
-
-    public string texture_path = "";
-    
 }
 
 

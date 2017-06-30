@@ -307,7 +307,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     private void offsetDraglineByCubeSize()
     {
 
-        /* Diferent sizae of cubes requires diferent draglines
+        /* Diferent size of cubes requires diferent draglines
          * so, take the common dragline for all cubes in the shelf
          * and tweak it slightly to fit the size of this gameobject
         */

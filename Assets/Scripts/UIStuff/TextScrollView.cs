@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Text.RegularExpressions;
 
 public class TextScrollView : CallBackRegisterableClass {
+
+
+    public bool multipleSelectionEnable = false;
 
     private List<GameObject> texts;
 
@@ -85,13 +89,12 @@ public class TextScrollView : CallBackRegisterableClass {
         Initialize();
     }
 
-
     public void ProcessClick(int textClickedID)
     {
 
         // Support for CTRL | SHIFT to select multiple products at once
         // Determine what needs to be selected
-        if (shift_pressed)
+        if (shift_pressed && multipleSelectionEnable)
         {
             if(last_entry_selected == -1)
             {
@@ -118,7 +121,7 @@ public class TextScrollView : CallBackRegisterableClass {
             }
         }
         // Shift has priortity
-        else if (ctrl_pressed)
+        else if (ctrl_pressed && multipleSelectionEnable)
         {
             entry_selected[textClickedID] = !entry_selected[textClickedID];
         }
@@ -130,24 +133,44 @@ public class TextScrollView : CallBackRegisterableClass {
                 entry_selected[i] = false;
             }
             entry_selected[textClickedID] = true;
+            current_index = textClickedID;
         }
 
+        UpdateColor();
 
-        // Set the color status accordingly
-        for(int i =0; i < texts.Count; i++)
+       
+        if (multipleSelectionEnable)
         {
-            texts[i].GetComponent<Text>().color = entry_selected[i] ?  Color.cyan : Color.white;
-        }
-
-        if (selectedChangedCallback != null)
-        {
-            for (int i = 0; i < selectedChangedCallback.Count; i++)
+            if (selectedChangedCallback != null)
             {
-                selectedChangedCallback[i](entry_selected.ToArray());
+                for (int i = 0; i < selectedChangedCallback.Count; i++)
+                {
+                    selectedChangedCallback[i](entry_selected.ToArray());
+                }
             }
         }
+        else
+        {
+            if (indexChangedCallback != null)
+            {
+                for (int i = 0; i < indexChangedCallback.Count; i++)
+                {
+                    indexChangedCallback[i](current_index);
+                }
+            }
+        }
+        
 
         last_entry_selected = textClickedID;
+    }
+
+    private void UpdateColor()
+    {
+        // Set the color status accordingly
+        for (int i = 0; i < texts.Count; i++)
+        {
+            texts[i].GetComponent<Text>().color = entry_selected[i] ? Color.cyan : Color.white;
+        }
     }
 
     private void Update()
@@ -155,4 +178,60 @@ public class TextScrollView : CallBackRegisterableClass {
         shift_pressed = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
         ctrl_pressed = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
     }
+
+    public void SetSelected(bool[] selected)
+    {
+        if(selected.Length != texts.Count)
+        {
+            Debug.LogError("Attempted to set selected status on textview, but vector sizes don't match !");
+        }
+        else
+        {
+            entry_selected.Clear();
+            for(int i =0; i < selected.Length; i++)
+            {
+                entry_selected.Add(selected[i]);
+            }
+            UpdateColor();
+        }
+    }
+
+    public void SetSelected(int selected_index)
+    {
+        if (selected_index > texts.Count)
+        {
+            Debug.LogError("Attempted to set selected status on textview, but index is bigger than number of fields !");
+        }
+        else
+        {
+            entry_selected.Clear();
+            for (int i = 0; i < entry_selected.Count; i++)
+            {
+                entry_selected[i] = false;
+            }
+            entry_selected[selected_index] = true;
+            current_index = selected_index;
+            UpdateColor();
+        }
+    }
+
+    public void SearchFunction(Regex search)
+    {
+        // This fucntion will hide all the entries which do not match the search pattern
+
+        
+
+        for(int i =0; i < texts.Count; i++)
+        {
+            if (search.IsMatch(texts[i].GetComponent<Text>().text))
+            {
+                texts[i].SetActive(true);
+            }
+            else
+            {
+                texts[i].SetActive(false);
+            }
+        }
+    }
+
 }

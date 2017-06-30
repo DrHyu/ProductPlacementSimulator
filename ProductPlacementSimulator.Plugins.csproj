@@ -130,6 +130,12 @@
     <None Include="Assets\Standard Assets\CrossPlatformInput\CrossPlatformInputGuidelines.txt" />
     <None Include="Assets\StreamingAssets\TEST_THING.txt" />
     <None Include="Assets\StreamingAssets\pallet_stand.txt" />
+    <None Include="Assets\UIpack\Spritesheet\blueSheet.xml" />
+    <None Include="Assets\UIpack\Spritesheet\greenSheet.xml" />
+    <None Include="Assets\UIpack\Spritesheet\greySheet.xml" />
+    <None Include="Assets\UIpack\Spritesheet\redSheet.xml" />
+    <None Include="Assets\UIpack\Spritesheet\yellowSheet.xml" />
+    <None Include="Assets\UIpack\license.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />

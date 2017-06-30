@@ -1,0 +1,28 @@
+{
+	"contents":[
+				{
+					"ID": 1,
+					"name": "Gelocatil 650 mg",
+					"width": 1.0,
+					"height": 0.5,
+					"depth": 0.4,
+					"img_path": ""
+				},
+				{
+					"ID": 2,
+					"name": "Ibuprofeno 600 mg",
+					"width": 0.8,
+					"height": 0.5,
+					"depth": 0.4,
+					"img_path": ""
+				},
+				{
+					"ID": 3,
+					"name": "Shampoo",
+					"width": 0.5,
+					"height": 1.5,
+					"depth": 0.5,
+					"img_path": ""
+				}
+	]
+} 
