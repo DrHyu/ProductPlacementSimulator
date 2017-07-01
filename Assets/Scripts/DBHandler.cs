@@ -38,6 +38,16 @@ public class DBHandler : MonoBehaviour
             Debug.LogError("Cannot load databse!");
         }
     }
+    
+    public BoxJSON FindItemByID(int ID)
+    {
+        return null;
+    }
+
+    public BoxJSON[] SearchItemByName(string search)
+    {
+        return null;
+    }
 }
 
 
