@@ -1,13 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 using System;
 
 [Serializable]
 public class ShelfGenerator : MonoBehaviour
 {
+
+    public bool one = true;
+    public bool two = true;
+
     public int n_cubes;
     public List<GameObject> cubes;
     public List<BoxJSON> productList;
+    Dictionary<int, GameObject> id2cube;
 
     public ShelfJSON this_shelf;
 
@@ -16,8 +22,11 @@ public class ShelfGenerator : MonoBehaviour
 
     private Vector3[] offsettedDragline;
 
+    public CollisionMap tempCollisionMap;    
+
     public void Initialize(ShelfJSON s)
     {
+
         name = s.name;
 
         this_shelf = s;
@@ -69,6 +78,7 @@ public class ShelfGenerator : MonoBehaviour
 
         cubes       = new List<GameObject>();
         productList = new List<BoxJSON>();
+        id2cube     = new Dictionary<int, GameObject>();
 
         if (this_shelf.boxes != null)
         {
@@ -77,7 +87,7 @@ public class ShelfGenerator : MonoBehaviour
                 GenerateProduct(this_shelf.boxes[p]);
             }
         }
-        
+
     }
 
     public void GenerateProduct(BoxJSON box)
@@ -91,11 +101,13 @@ public class ShelfGenerator : MonoBehaviour
 
         Drag3D d3d = go.AddComponent(typeof(Drag3D)) as Drag3D;
         // TODO Child ID needs to be revised
-        d3d.Initialize(box, offsettedDragline, cubes.Count - 1);
+        d3d.Initialize(box, offsettedDragline);
 
         // Make it so there is always at least a very small gap in betwwen cubes
         go.GetComponent<BoxCollider>().size *= 1.05f;
 
+        id2cube.Add(go.GetInstanceID(), go);
+        InvalideChildCollisionMaps();
     }
 
     public void UpdateColor()
@@ -111,34 +123,60 @@ public class ShelfGenerator : MonoBehaviour
         }
     }
 
-    // What we want is to "flatten out" all the draglines in a shelf into a line representing the entire length of the dragable space 
-
     // Methods used by childs to check/clear collisions with other childs //
-    public bool CubeIsColided(Bounds cubeMovedBounds, int insanceID)
+    //public bool CubeIsColided(Bounds cubeMovedBounds, int insanceID)
+    //{
+    //    bool colision_happened = false;
+    //    for (int i = 0; i < cubes.Count; i++)
+    //    {
+    //        if (cubes[i].GetInstanceID() == insanceID) { continue; }
+
+    //        if (cubes[i].GetComponent<BoxCollider>().bounds.Intersects(cubeMovedBounds))
+    //        {
+    //            // Update the other cube's color to show collision aswell.
+    //            cubes[i].GetComponent<Drag3D>().collided_upon = true;
+    //            cubes[i].GetComponent<Drag3D>().updateColor();
+    //            colision_happened = true;
+    //        }
+    //        else
+    //        {
+    //            cubes[i].GetComponent<Drag3D>().collided_upon = false;
+    //            cubes[i].GetComponent<Drag3D>().updateColor();
+    //        }
+
+    //    }
+    //    return colision_happened;
+    //}
+
+    public void InvalideChildCollisionMaps()
     {
-        bool colision_happened = false;
-        for (int i = 0; i < cubes.Count; i++)
+        foreach( GameObject go in cubes)
         {
-            if (cubes[i].GetInstanceID() == insanceID) { continue; }
-
-            if (cubes[i].GetComponent<BoxCollider>().bounds.Intersects(cubeMovedBounds))
-            {
-                // Update the other cube's color to show collision aswell.
-                cubes[i].GetComponent<Drag3D>().collided_upon = true;
-                cubes[i].GetComponent<Drag3D>().updateColor();
-                colision_happened = true;
-            }
-            else
-            {
-                cubes[i].GetComponent<Drag3D>().collided_upon = false;
-                cubes[i].GetComponent<Drag3D>().updateColor();
-            }
-
+            go.GetComponent<Drag3D>().cm = null;
         }
-        return colision_happened;
     }
 
-    public void clearCollision()
+    public void InvalideChildCollisionMaps(int exceptID)
+    {
+        foreach (GameObject go in cubes)
+        {
+            if (go.GetInstanceID() != exceptID)
+            {
+                go.GetComponent<Drag3D>().cm = null;
+            }
+        }
+    }
+
+    public void NotifyCollision(int[] IDs, int srcID)
+    {
+        foreach (int id in IDs)
+        {
+            id2cube[id].GetComponent<Drag3D>().collided_upon = true;
+            id2cube[id].GetComponent<Drag3D>().updateColor();
+        }
+    }
+
+    public void ClearCollision()
     {
         for (int i = 0; i < cubes.Count; i++)
         {
@@ -146,4 +184,54 @@ public class ShelfGenerator : MonoBehaviour
             cubes[i].GetComponent<Drag3D>().updateColor();
         }
     }
+
+    private void Update()
+    {
+    }
+
+    private void OnDrawGizmos()
+    {
+
+        Gizmos.matrix = transform.localToWorldMatrix;
+
+        Gizmos.color = Color.red;
+
+        if (tempCollisionMap != null)
+        {                
+            for (int i = 0; i < tempCollisionMap.perNodeCollision.Length - 1; i++)
+            {
+                for (int p = 0; p < tempCollisionMap.perNodeCollision[i].Count; p++)
+                {
+
+                    CollisionBucket cb = tempCollisionMap.perNodeCollision[i][p];
+
+                    if(cb == null || cb.left == null || cb.right == null) { continue;}
+
+                    Vector3 sStart = tempCollisionMap.mDraglines[i];
+                    Vector3 sDir = (tempCollisionMap.mDraglines[i + 1] - sStart);
+                    Vector3 sPerp = (new Vector3(sDir.z, sDir.y, -sDir.x)).normalized;
+
+                    // Need to find the 4 poins that define the area of the collision
+
+                    Vector3 c00 = sStart + (tempCollisionMap.resolution * (p + 0.5f)) * sDir.normalized;
+                    Vector3 c01 = c00 + cb.right.height * sPerp.normalized;
+
+                    if (cb.right.height < 30)
+                    {
+                        Gizmos.DrawLine(c00, c01);
+                    }
+
+                    c01 = c00 + cb.left.height * -sPerp.normalized;
+
+                    if (cb.left.height < 30)
+                    {
+                        Gizmos.DrawLine(c00, c01);
+                    }
+                }
+            }
+            
+        }
+    }
+
+
 }

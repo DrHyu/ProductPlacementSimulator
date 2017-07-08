@@ -7,8 +7,7 @@ using UnityEngine.EventSystems;
 
 class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 {
-    // Index within array of cubes in parent objedt
-    private int ID;
+    public CollisionMap cm;
 
     private BoxJSON this_box;
 
@@ -43,9 +42,6 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     // The face of the cube should always be oriented in this direction
     private Vector2[] normals;
 
-
-    public Vector3[] debug;
-
     /* - - - - - OVERRIDE METHODS - - - - - */
 
     private void Start()
@@ -72,23 +68,42 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
             int next_index;
             // Try the new position
             transform.localPosition = getClosestPointInCurrentLine(mousePos3D, this_box.current_index, out next_index);
+
             this_box.current_index = next_index;
 
-            // Check if it colides with anything else on this new location
-            if (GetComponentInParent<ShelfGenerator>().CubeIsColided(
-                    gameObject.GetComponent<BoxCollider>().bounds, gameObject.GetInstanceID()))
+            // This box moved so the other collision maps are no longer valid
+            GetComponentInParent<ShelfGenerator>().InvalideChildCollisionMaps(gameObject.GetInstanceID());
+
+            // This could be done when initializing this object on the ShelfGenerator. 
+            // However, It is likely that not every cube will be moved during a sesion, therefore it makes sense to calculate the collision map only when a cube is moved
+            //if (cm == null)
+            //{
+                ShelfGenerator sg = GetComponentInParent<ShelfGenerator>();
+                CollisionMap.CalculateCollisionMap(localDragLines, sg.productList.ToArray(), sg.cubes.ToArray(), transform.parent, out cm, this_box);
+            //}
+            //// Further calls will merely update the map with the movement of this cube whithout recalculating the impact of the other boxes in the shelf
+            //else
+            //{
+            //    CollisionMap.UpdateCollisionMap(localDragLines, this_box, gameObject, transform.parent, ref cm);
+            //}
+
+            GetComponentInParent<ShelfGenerator>().tempCollisionMap = cm;
+
+            int[] collided_with;
+            if (cm.AmICollided(gameObject.GetInstanceID(), out collided_with))
             {
                 collided = true;
                 updateColor();
+
+                GetComponentInParent<ShelfGenerator>().NotifyCollision(collided_with, gameObject.GetInstanceID());
             }
-            // If it does, revert back to the previous position
             else
             {
                 // If transitioning from collided to non collided
                 if (collided)
                 {
                     // Notify that we are not longer in collision and cubes that are "collided upon" can reset to default state
-                    GetComponentInParent<ShelfGenerator>().clearCollision();
+                    GetComponentInParent<ShelfGenerator>().ClearCollision();
                 }
                 collided = false;
                 updateColor();
@@ -103,6 +118,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
                 // Stored this way to allow the stands to be rotated and/or scaled while maintaining the relative position of this cube
                 this_box.current_pos_relative = Vector3.Magnitude(transform.localPosition - localDragLines[this_box.current_index]) / Vector3.Magnitude(localDragLines[this_box.current_index + 1] - localDragLines[this_box.current_index]);
             }
+            
         }
 
     }
@@ -135,7 +151,6 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     private void LateUpdate()
     {
         Vector3 n = normals[this_box.current_index].to3DwY(0);
-
         transform.localRotation = Quaternion.LookRotation(n);
     }
 
@@ -154,7 +169,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         if (collided)
         {
             // Notify that we are not longer in collision and cubes that are "collided upon" can reset to default state
-            GetComponentInParent<ShelfGenerator>().clearCollision();
+            GetComponentInParent<ShelfGenerator>().ClearCollision();
             transform.localPosition = last_position;
             this_box.current_index = last_index;
             collided = false;
@@ -174,17 +189,17 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     {
         // Only do something if we are the ones causing the colision
 
-        collided = true;
+        //collided = true;
     }
 
     private void OnCollisionExit(Collision collision)
     {
-        collided = false;
+        //collided = false;
     }
 
     private void OnCollisionStay(Collision collision)
     {
-        collided = true;
+        //collided = true;
 
     }
 
@@ -234,7 +249,6 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
         }
 
-
     }
 
     /* - - - - - NON-STATIC METHODS - - - - - */
@@ -277,11 +291,9 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         
     }
 
-    public void Initialize(BoxJSON b, Vector3[] _dragLines, int _ID)
+    public void Initialize(BoxJSON b, Vector3[] _dragLines)
     {
         this_box = b;
-        ID = _ID;
-
         transform.localScale = new Vector3(b.width, b.height, b.depth);
 
         globalDragLines = _dragLines;
@@ -289,11 +301,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         CalculateNormals();
 
         transform.localPosition = localDragLines[this_box.current_index] + (localDragLines[this_box.current_index + 1] - localDragLines[this_box.current_index]) * this_box.current_pos_relative;
-    }
 
-    public void setId(int _ID)
-    {
-        ID = _ID;
     }
 
     public void setDragline(Vector3[] _dragLines)
@@ -432,18 +440,17 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     /* - - - - - STATIC METHODS - - - - - */
 
-    private static Vector2 PerpendicularClockwise(Vector2 vector2)
+    public static Vector2 PerpendicularClockwise(Vector2 vector2)
     {
         return new Vector2(-vector2.y, vector2.x);
     }
 
-    private static Vector2 PerpendicularCounterClockwise(Vector2 vector2)
+    public static Vector2 PerpendicularCounterClockwise(Vector2 vector2)
     {
         return new Vector2(vector2.y, -vector2.x);
     }
 
-    public static bool Intersects(Vector p, Vector p2, Vector q, Vector q2,
-    out Vector intersection, bool considerCollinearOverlapAsIntersect = false)
+    public static bool Intersects(Vector p, Vector p2, Vector q, Vector q2, out Vector intersection, bool considerCollinearOverlapAsIntersect = false)
     {
         intersection = new Vector();
 
@@ -707,7 +714,28 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         }
     }
 
+    public static bool IntersectRay2DvsSegment(Vector2 p, Vector2 r, Vector2 a, Vector2 b, out Vector2 isc)
+    {
+        Vector2 dir = b - a;
 
+        if (IntersectRay2D(p, r, a, dir, out isc))
+        {
+            // if (a <= isc <= b || a >= isc >= b)
+            if(((a.x <= isc.x && b.x >= isc.x) || (a.x >= isc.x && b.x <= isc.x)) && ((a.y <= isc.y && b.y >= isc.y) || (a.y >= isc.y && b.y <= isc.y)))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+        
+    }
 
 
 
