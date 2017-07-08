@@ -47,6 +47,14 @@
 					"height": 4.0,
 					"depth": 2.0,
 					"img_path": ""
+				},
+				{
+					"ID": 7,
+					"name": "LONGG",
+					"width": 2.0,
+					"height": 2.0,
+					"depth": 4.0,
+					"img_path": ""
 				}
 	]
 } 

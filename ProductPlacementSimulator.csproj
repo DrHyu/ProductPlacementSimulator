@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.6.2f1</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion>4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -96,8 +98,10 @@
     <Compile Include="Assets\Scripts\DataStructs\JSONDataStructs.cs" />
     <Compile Include="Assets\Scripts\DataStructs\Shelf.cs" />
     <Compile Include="Assets\Scripts\Extensions.cs" />
+    <Compile Include="Assets\Scripts\Generators\CollisionMap.cs" />
     <Compile Include="Assets\Scripts\Generators\Drag3D.cs" />
     <Compile Include="Assets\Scripts\Generators\MeshGenerator.cs" />
+    <Compile Include="Assets\Scripts\Generators\MiscFunc.cs" />
     <Compile Include="Assets\Scripts\Generators\SceneGenerator.cs" />
     <Compile Include="Assets\Scripts\Generators\ShelfGenerator.cs" />
     <Compile Include="Assets\Scripts\Generators\StandGenerator.cs" />
@@ -113,6 +117,7 @@
     <Compile Include="Assets\Scripts\Vector.cs" />
     <Compile Include="Assets\Scripts\camera2.cs" />
     <Compile Include="Assets\Scripts\maxCamera.cs" />
+    <Compile Include="Assets\Scripts\testbounds.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Standard Assets\Characters\FirstPersonCharacter\FirstPersonCharacterGuidelines.txt" />
