@@ -170,8 +170,12 @@ public class UIController : MonoBehaviour {
     {
         search = searchField.text;
         search = ".*" + search + ".*";
-        //string pt = "@\"\\b(" + db.GetPattern + ")\\b\"";
         Regex regex = new Regex(search, RegexOptions.IgnoreCase);
+        // search in db 
+
+        DBListerView.Clear();
+        DBListerView.AddText(DBH.SearchItemByName(searchField.text)); // param: List of strings
+
         DBListerView.SearchFunction(regex);
     }
 

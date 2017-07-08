@@ -219,8 +219,6 @@ public class TextScrollView : CallBackRegisterableClass {
     {
         // This fucntion will hide all the entries which do not match the search pattern
 
-        
-
         for(int i =0; i < texts.Count; i++)
         {
             if (search.IsMatch(texts[i].GetComponent<Text>().text))
