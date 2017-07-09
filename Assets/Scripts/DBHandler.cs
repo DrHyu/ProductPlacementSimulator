@@ -16,7 +16,9 @@ public class DBHandler : MonoBehaviour
     // Probabaly in the future it is worth to have proper MYSQL db of some kind. 
 
     public string DB_PATH;
-    public DB db;
+    private DB full_db;
+
+    private const string SELECT_ALL = "SELECT ID, NAME, WIDTH, HEIGHT, DEPTH ";
 
     private IDbConnection dbconn;
 
@@ -24,12 +26,13 @@ public class DBHandler : MonoBehaviour
     void Awake()
     {
         DB_PATH = Application.dataPath + "/productDB.db"; //Path to database.
-        db = new DB();
+        full_db = new DB();
         Read_DB();
     }
 
     private void Read_DB()
     {
+
         if (File.Exists(Application.dataPath + "/productDB.db"))
         {
 
@@ -67,7 +70,7 @@ public class DBHandler : MonoBehaviour
             }
 
             // Convert accumulated List into array
-            db.contents = items.ToArray();
+            full_db.contents = items.ToArray();
 
             // DB Closing
             reader.Close();
@@ -92,7 +95,7 @@ public class DBHandler : MonoBehaviour
         IDbCommand dbcmd = dbconn.CreateCommand();
 
         // Partial coincidence query
-        string sqlQuery = "SELECT ID, NAME, WIDTH, HEIGHT, DEPTH " + "FROM Product" + " WHERE ID = @param";
+        string sqlQuery = SELECT_ALL + "FROM Product" + " WHERE ID = @param";
         dbcmd.CommandText = sqlQuery;
         // Requires % around search word to look for it in any substring of the products' names
         dbcmd.Parameters.Add(new SqliteParameter("@param", ID));
@@ -135,7 +138,7 @@ public class DBHandler : MonoBehaviour
         return found;
     }
 
-    public List<String> SearchItemByName(string search)
+    public DB SearchItemByName(string search)
     {
         // ';UPDATE Product SET NAME = 'Troll1' WHERE ID = 1;-- // ';DROP TABLE;-- // SQL Injection tests
 
@@ -144,24 +147,39 @@ public class DBHandler : MonoBehaviour
         IDbCommand dbcmd = dbconn.CreateCommand();
         
         // Partial coincidence query
-        string sqlQuery = "SELECT DISTINCT(NAME) " + "FROM Product" + " WHERE NAME LIKE @param";
+        string sqlQuery = SELECT_ALL + "FROM Product" + " WHERE NAME LIKE @param";
         dbcmd.CommandText = sqlQuery;
         // Requires % around search word to look for it in any substring of the products' names
         dbcmd.Parameters.Add(new SqliteParameter("@param", "%"+search+"%"));
 
-        List<String> return_items = new List<String>();
+        DB returnDB = new DB();
+        List<DBItem> cntents = new List<DBItem>();
 
         IDataReader reader = dbcmd.ExecuteReader();
         while (reader.Read())
         {
             // Get the variables form the entry of the reader
-            string name = reader.GetString(0);
+            int id = reader.GetInt32(0);
+            string name = reader.GetString(1);
+            float width = reader.GetFloat(2);
+            float height = reader.GetFloat(3);
+            float depth = reader.GetFloat(4);
+
+            DBItem temp = new DBItem();
 
             Debug.Log("found = " + name);
 
-            return_items.Add(name);
+            temp.ID = id;
+            temp.name = name;
+            temp.width = width;
+            temp.height = height;
+            temp.depth = depth;
+
+            cntents.Add(temp);
         }
-        
+
+        returnDB.contents = cntents.ToArray();
+
         // DB Closing
         reader.Close();
         reader = null;
@@ -171,8 +189,22 @@ public class DBHandler : MonoBehaviour
         dbconn = null;
 
 
-        return return_items;
+        return returnDB;
     }
+
+    public DB ReadFullDB()
+    {
+        if (full_db != null)
+        {
+            return full_db;
+        }
+        else
+        {
+            Debug.LogError("Attempted to fetch empty full db");
+            return null;
+        }
+    }
+
 }
 
 

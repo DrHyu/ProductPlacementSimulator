@@ -8,6 +8,7 @@ public class UItoSimulation : MonoBehaviour
     // It stands in the middle and passes all messages. 
 
     public DBHandler dbh;
+    private DB myDB;
     
     private List<StandGenerator> standList;
 
@@ -128,11 +129,11 @@ public class UItoSimulation : MonoBehaviour
     {
 
         DBItem ref_item = null;
-        for(int i =0; i < dbh.db.contents.Length; i++)
+        for(int i =0; i < myDB.contents.Length; i++)
         {
-            if(dbh.db.contents[i].ID == db_ref)
+            if(myDB.contents[i].ID == db_ref)
             {
-                ref_item = dbh.db.contents[i];
+                ref_item = myDB.contents[i];
             }
         }
 
@@ -154,7 +155,7 @@ public class UItoSimulation : MonoBehaviour
 
     private void Start()
     {
-        
+        myDB = dbh.ReadFullDB();
     }
 
 

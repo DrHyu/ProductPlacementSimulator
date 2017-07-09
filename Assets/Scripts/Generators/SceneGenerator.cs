@@ -28,7 +28,13 @@ public class SceneGenerator : MonoBehaviour
 
     public void GenerateScene(string JSONName)
     {
-        LoadShelfData(JSONName);
+        SceneData sc = LoadShelfData(JSONName);
+        GenerateScene(sc);
+    }
+
+    public void GenerateScene(SceneData sd)
+    {
+        sceneData = sd;
 
         stands = new List<StandGenerator>();
 
@@ -42,20 +48,24 @@ public class SceneGenerator : MonoBehaviour
         }
     }
 
-    private void LoadShelfData(string JSONName)
+    private SceneData LoadShelfData(string JSONName)
     {
+        SceneData sd = null;
         if (File.Exists(JSONName))
         {
             // Read the json from the file into a string
             string dataAsJson = File.ReadAllText(JSONName);
             // Pass the json to JsonUtility, and tell it to create a GameData object from it
-            sceneData = JsonUtility.FromJson<SceneData>(dataAsJson);
+            sd = JsonUtility.FromJson<SceneData>(dataAsJson);
         }
         else
         {
             Debug.LogError("Cannot load game data!");
         }
+        return sd;
     }
+
+    
     
     public void RegisterChild(StandGenerator s)
     {

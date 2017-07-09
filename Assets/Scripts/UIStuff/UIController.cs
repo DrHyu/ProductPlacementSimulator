@@ -62,19 +62,26 @@ public class UIController : MonoBehaviour {
         initialized = true;
     }
 
-    private void Start()
+    private void InitializeDBStuff(DB newDB)
     {
-        // TODO: Kinda crappy, fix when db rework is done
-        myDB = DBH.db;
+        myDB = newDB;
 
-        DBListerView.RegisterIndexChangedCallback(OnDBListerIndexChanged);
-
+        DBListerView.Clear();
         dbNames = new List<string>();
         for (int i = 0; i < myDB.contents.Length; i++)
         {
             dbNames.Add(myDB.contents[i].name);
         }
         DBListerView.AddText(dbNames);
+        dbIndex = 0;
+    }
+
+
+    private void Start()
+    {
+
+        InitializeDBStuff(DBH.ReadFullDB());
+        DBListerView.RegisterIndexChangedCallback(OnDBListerIndexChanged);
 
     }
 
@@ -157,8 +164,6 @@ public class UIController : MonoBehaviour {
             initialized = false;
             UpdateUIState(stand_dropdown_index, shelf_dropdown_index, null);
         }
-            
-
     }
 
     public void OnDBListerIndexChanged(int index)
@@ -173,10 +178,15 @@ public class UIController : MonoBehaviour {
         Regex regex = new Regex(search, RegexOptions.IgnoreCase);
         // search in db 
 
-        DBListerView.Clear();
-        DBListerView.AddText(DBH.SearchItemByName(searchField.text)); // param: List of strings
-
-        DBListerView.SearchFunction(regex);
+        if (search == "")
+        {
+            InitializeDBStuff(DBH.ReadFullDB());
+        }
+        else
+        {
+            InitializeDBStuff(DBH.SearchItemByName(searchField.text));
+        }
+        
     }
 
     // How to view the non-selected elements //
