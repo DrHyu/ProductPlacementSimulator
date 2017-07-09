@@ -1,73 +1,30 @@
 <?xml version="1.0" encoding="utf-16"?>
-<DevTrackerData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" SolutionTotalEditTime="PT10H33M1.4683217S" SolutionTotalViewTime="PT17H26M16.7105445S" SolutionTotalDebugTime="PT8H44M39.8943685S">
+<DevTrackerData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" SolutionTotalEditTime="PT11H7M21.1090337S" SolutionTotalViewTime="PT18H9M53.7146639S" SolutionTotalDebugTime="PT8H49M52.4328372S">
   <FileVersion>
     <Major>1</Major>
     <Minor>0</Minor>
   </FileVersion>
   <SessionTimeList />
   <LastSessionTimeList>
-    <DevTrackerDataItem ViewActiveTime="PT12M5.9151984S" EditActiveTime="PT9M45.7867278S">
-      <ModifiedDate>2017-07-08T14:37:53.5230827+02:00</ModifiedDate>
-      <ModifiedBy>Jaume</ModifiedBy>
-      <EditedCount>1</EditedCount>
-      <ViewedCount>1</ViewedCount>
-      <Item>C:\Users\Jaume\Documents\ProductPlacementSimulator\Assets\Scripts\Generators\CollisionMap.cs</Item>
-      <ItemType>ProjectItem</ItemType>
-      <ProjectName>C:\Users\Jaume\Documents\ProductPlacementSimulator\ProductPlacementSimulator.csproj</ProjectName>
-      <CreatedDate>2017-07-08T12:48:41.7183105+02:00</CreatedDate>
-      <ViewedBy>Jaume</ViewedBy>
-    </DevTrackerDataItem>
-    <DevTrackerDataItem ViewActiveTime="PT25M24.1695519S" EditActiveTime="PT0S">
+    <DevTrackerDataItem ViewActiveTime="PT5M12.5379663S" EditActiveTime="PT0S">
       <ModifiedDate>0001-01-01T00:00:00</ModifiedDate>
       <EditedCount>0</EditedCount>
       <ViewedCount>1</ViewedCount>
       <Item>Debug Mode</Item>
       <ItemType>DebugModeItem</ItemType>
       <ProjectName />
-      <CreatedDate>2017-07-08T12:58:24.904187+02:00</CreatedDate>
+      <CreatedDate>2017-07-09T15:43:53.2339098+02:00</CreatedDate>
       <ViewedBy>Jaume</ViewedBy>
     </DevTrackerDataItem>
-    <DevTrackerDataItem ViewActiveTime="PT11M17.2049063S" EditActiveTime="PT9M39.0902188S">
-      <ModifiedDate>2017-07-08T15:11:10.4814121+02:00</ModifiedDate>
+    <DevTrackerDataItem ViewActiveTime="PT43M37.0142328S" EditActiveTime="PT34M19.6366117S">
+      <ModifiedDate>2017-07-09T21:20:49.9115017+02:00</ModifiedDate>
       <ModifiedBy>Jaume</ModifiedBy>
       <EditedCount>1</EditedCount>
       <ViewedCount>1</ViewedCount>
       <Item>c:\users\jaume\documents\productplacementsimulator\assets\scripts\generators\Drag3D.cs</Item>
       <ItemType>ProjectItem</ItemType>
       <ProjectName>C:\Users\Jaume\Documents\ProductPlacementSimulator\ProductPlacementSimulator.csproj</ProjectName>
-      <CreatedDate>2017-07-08T13:31:39.162643+02:00</CreatedDate>
-      <ViewedBy>Jaume</ViewedBy>
-    </DevTrackerDataItem>
-    <DevTrackerDataItem ViewActiveTime="PT6.3416363S" EditActiveTime="PT0S">
-      <ModifiedDate>0001-01-01T00:00:00</ModifiedDate>
-      <EditedCount>0</EditedCount>
-      <ViewedCount>1</ViewedCount>
-      <Item>C:\Users\Jaume\Documents\ProductPlacementSimulator\Assets\Editor\MenuJSONOps.cs</Item>
-      <ItemType>ProjectItem</ItemType>
-      <ProjectName>C:\Users\Jaume\Documents\ProductPlacementSimulator\ProductPlacementSimulator.Editor.csproj</ProjectName>
-      <CreatedDate>2017-07-08T12:47:37.885909+02:00</CreatedDate>
-      <ViewedBy>Jaume</ViewedBy>
-    </DevTrackerDataItem>
-    <DevTrackerDataItem ViewActiveTime="PT7M54.0669637S" EditActiveTime="PT5M18.6501544S">
-      <ModifiedDate>2017-07-08T14:13:37.6553749+02:00</ModifiedDate>
-      <ModifiedBy>Jaume</ModifiedBy>
-      <EditedCount>1</EditedCount>
-      <ViewedCount>1</ViewedCount>
-      <Item>c:\users\jaume\documents\productplacementsimulator\assets\scripts\generators\MiscFunc.cs</Item>
-      <ItemType>ProjectItem</ItemType>
-      <ProjectName>C:\Users\Jaume\Documents\ProductPlacementSimulator\ProductPlacementSimulator.csproj</ProjectName>
-      <CreatedDate>2017-07-08T12:47:44.2290485+02:00</CreatedDate>
-      <ViewedBy>Jaume</ViewedBy>
-    </DevTrackerDataItem>
-    <DevTrackerDataItem ViewActiveTime="PT16.7166286S" EditActiveTime="PT15.015195S">
-      <ModifiedDate>2017-07-08T13:12:31.8183547+02:00</ModifiedDate>
-      <ModifiedBy>Jaume</ModifiedBy>
-      <EditedCount>1</EditedCount>
-      <ViewedCount>1</ViewedCount>
-      <Item>c:\users\jaume\documents\productplacementsimulator\assets\scripts\generators\ShelfGenerator.cs</Item>
-      <ItemType>ProjectItem</ItemType>
-      <ProjectName>C:\Users\Jaume\Documents\ProductPlacementSimulator\ProductPlacementSimulator.csproj</ProjectName>
-      <CreatedDate>2017-07-08T13:00:27.1952828+02:00</CreatedDate>
+      <CreatedDate>2017-07-09T14:52:46.0155749+02:00</CreatedDate>
       <ViewedBy>Jaume</ViewedBy>
     </DevTrackerDataItem>
   </LastSessionTimeList>
@@ -136,10 +93,10 @@
       <CreatedDate>2017-06-30T10:00:37.3177922+02:00</CreatedDate>
       <ViewedBy>Jaume</ViewedBy>
     </DevTrackerDataItem>
-    <DevTrackerDataItem ViewActiveTime="PT8H44M39.8948709S" EditActiveTime="PT0S">
+    <DevTrackerDataItem ViewActiveTime="PT8H49M52.4328372S" EditActiveTime="PT0S">
       <ModifiedDate>0001-01-01T00:00:00</ModifiedDate>
       <EditedCount>0</EditedCount>
-      <ViewedCount>12</ViewedCount>
+      <ViewedCount>13</ViewedCount>
       <Item>Debug Mode</Item>
       <ItemType>DebugModeItem</ItemType>
       <ProjectName />
@@ -156,11 +113,11 @@
       <CreatedDate>2017-05-23T19:09:36.3163367+02:00</CreatedDate>
       <ViewedBy>Jaume</ViewedBy>
     </DevTrackerDataItem>
-    <DevTrackerDataItem ViewActiveTime="PT2H1M34.8799524S" EditActiveTime="PT46M17.3831537S">
-      <ModifiedDate>2017-07-08T15:11:10.4814121+02:00</ModifiedDate>
+    <DevTrackerDataItem ViewActiveTime="PT2H45M11.8901994S" EditActiveTime="PT1H20M37.0197654S">
+      <ModifiedDate>2017-07-09T21:20:49.9115017+02:00</ModifiedDate>
       <ModifiedBy>Jaume</ModifiedBy>
-      <EditedCount>6</EditedCount>
-      <ViewedCount>7</ViewedCount>
+      <EditedCount>7</EditedCount>
+      <ViewedCount>8</ViewedCount>
       <Item>C:\Users\Jaume\Documents\ProductPlacementSimulator\Assets\Scripts\Generators\Drag3D.cs</Item>
       <ItemType>ProjectItem</ItemType>
       <ProjectName>C:\Users\Jaume\Documents\ProductPlacementSimulator\ProductPlacementSimulator.csproj</ProjectName>
@@ -373,6 +330,27 @@
     </DevTrackerDataItem>
   </TotalTimeList>
   <HistoryTimeList>
+    <DevTrackerDataItem ViewActiveTime="PT5M12.5379663S" EditActiveTime="PT0S">
+      <ModifiedDate>0001-01-01T00:00:00</ModifiedDate>
+      <EditedCount>0</EditedCount>
+      <ViewedCount>1</ViewedCount>
+      <Item>Debug Mode</Item>
+      <ItemType>DebugModeItem</ItemType>
+      <ProjectName />
+      <CreatedDate>2017-07-09T15:43:53.2339098+02:00</CreatedDate>
+      <ViewedBy>Jaume</ViewedBy>
+    </DevTrackerDataItem>
+    <DevTrackerDataItem ViewActiveTime="PT43M37.011248S" EditActiveTime="PT34M19.6366117S">
+      <ModifiedDate>2017-07-09T21:20:49.9115017+02:00</ModifiedDate>
+      <ModifiedBy>Jaume</ModifiedBy>
+      <EditedCount>1</EditedCount>
+      <ViewedCount>1</ViewedCount>
+      <Item>c:\users\jaume\documents\productplacementsimulator\assets\scripts\generators\Drag3D.cs</Item>
+      <ItemType>ProjectItem</ItemType>
+      <ProjectName>C:\Users\Jaume\Documents\ProductPlacementSimulator\ProductPlacementSimulator.csproj</ProjectName>
+      <CreatedDate>2017-07-09T14:52:46.0155749+02:00</CreatedDate>
+      <ViewedBy>Jaume</ViewedBy>
+    </DevTrackerDataItem>
     <DevTrackerDataItem ViewActiveTime="PT11M17.2018749S" EditActiveTime="PT9M39.0902188S">
       <ModifiedDate>2017-07-08T15:11:10.4814121+02:00</ModifiedDate>
       <ModifiedBy>Jaume</ModifiedBy>

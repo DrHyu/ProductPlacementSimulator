@@ -77,8 +77,12 @@ public class SceneGenerator : MonoBehaviour
 
         stands.Add(s);
 
-        GameObject UI = GameObject.Find("UIController");
-        UIController uiController = UI.GetComponent<UIController>();
-        uiController.SetStandList(stands);
+        // TODO probably needs a less crappy style
+        if (AUTOSTART)
+        {
+            GameObject UI = GameObject.Find("UIController");
+            UIController uiController = UI.GetComponent<UIController>();
+            uiController.SetStandList(stands);
+        }
     }
 }

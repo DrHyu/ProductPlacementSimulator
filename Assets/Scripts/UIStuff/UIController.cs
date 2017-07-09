@@ -168,8 +168,7 @@ public class UIController : MonoBehaviour {
     public void OnDBListerIndexChanged(int index)
     {
         dbIndex = index;
-        BoxJSON boxjson = new BoxJSON(DBH.SearchItemByID(index));
-        previewController.previewBox(boxjson);
+        previewController.PreviewBox(new BoxJSON(myDB.contents[index]));
     }
 
     public void OnSearchFieldChanged(string search)

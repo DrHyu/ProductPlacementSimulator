@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.6.2f1</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion>4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -114,6 +116,7 @@
     <Compile Include="Assets\Scripts\Triangulator.cs" />
     <Compile Include="Assets\Scripts\UIStuff\ButtonClickCallback.cs" />
     <Compile Include="Assets\Scripts\UIStuff\CallBackRegisterableClass.cs" />
+    <Compile Include="Assets\Scripts\UIStuff\PreviewController.cs" />
     <Compile Include="Assets\Scripts\UIStuff\TextClickHandle.cs" />
     <Compile Include="Assets\Scripts\UIStuff\TextScrollView.cs" />
     <Compile Include="Assets\Scripts\UIStuff\UIController.cs" />
@@ -121,7 +124,6 @@
     <Compile Include="Assets\Scripts\Vector.cs" />
     <Compile Include="Assets\Scripts\camera2.cs" />
     <Compile Include="Assets\Scripts\maxCamera.cs" />
-    <Compile Include="Assets\Scripts\testbounds.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Standard Assets\Characters\FirstPersonCharacter\FirstPersonCharacterGuidelines.txt" />
