@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Text.RegularExpressions;
 using System.IO;
 
 
@@ -35,7 +33,6 @@ public class UIController : MonoBehaviour {
 
     private List<string> dbNames;
     private int dbIndex = 0;
-
 
     private bool callbacksSet = false;
     private bool initialized = false;

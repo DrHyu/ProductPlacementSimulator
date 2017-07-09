@@ -44,5 +44,14 @@ public static class Extensions
         return new Vector(v.x, v.y);
     }
 
+    public static Vector2 PerpClockWise(this Vector2 v2)
+    {
+        return new Vector3(-v2.y, v2.x);
+    }
+
+    public static Vector2 PerpAntiClockWise(this Vector2 v2)
+    {
+        return new Vector3(v2.y, -v2.x);
+    }
 
 }

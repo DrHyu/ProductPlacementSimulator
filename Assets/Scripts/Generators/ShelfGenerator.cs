@@ -172,7 +172,7 @@ public class ShelfGenerator : MonoBehaviour
         foreach (int id in IDs)
         {
             id2cube[id].GetComponent<Drag3D>().collided_upon = true;
-            id2cube[id].GetComponent<Drag3D>().updateColor();
+            id2cube[id].GetComponent<Drag3D>().UpdateColor();
         }
     }
 
@@ -181,7 +181,7 @@ public class ShelfGenerator : MonoBehaviour
         for (int i = 0; i < cubes.Count; i++)
         {
             cubes[i].GetComponent<Drag3D>().collided_upon = false;
-            cubes[i].GetComponent<Drag3D>().updateColor();
+            cubes[i].GetComponent<Drag3D>().UpdateColor();
         }
     }
 

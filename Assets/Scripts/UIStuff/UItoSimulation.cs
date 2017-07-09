@@ -27,7 +27,7 @@ public class UItoSimulation : MonoBehaviour
             for (int i = 0; i < product_sel.Length; i++)
             {
                 standList[stand_sel].shelves[shelf_sel].cubes[i].GetComponent<Drag3D>().selected = false;
-                standList[stand_sel].shelves[shelf_sel].cubes[i].GetComponent<Drag3D>().updateColor();
+                standList[stand_sel].shelves[shelf_sel].cubes[i].GetComponent<Drag3D>().UpdateColor();
             }
         }
 
@@ -62,7 +62,7 @@ public class UItoSimulation : MonoBehaviour
             for (int i = 0; i < product_index.Length; i++)
             {
                 standList[stand_index].shelves[shelf_index].cubes[i].GetComponent<Drag3D>().selected = product_index[i];
-                standList[stand_index].shelves[shelf_index].cubes[i].GetComponent<Drag3D>().updateColor();
+                standList[stand_index].shelves[shelf_index].cubes[i].GetComponent<Drag3D>().UpdateColor();
             }
         }
 
@@ -70,7 +70,6 @@ public class UItoSimulation : MonoBehaviour
         shelf_sel = shelf_index;
         product_sel = product_index;
     }
-
 
     public const int ALPHA_CHANGE  = 0;
     public const int NO_CHANGE     = 1;
@@ -157,6 +156,5 @@ public class UItoSimulation : MonoBehaviour
     {
         myDB = dbh.ReadFullDB();
     }
-
 
 }

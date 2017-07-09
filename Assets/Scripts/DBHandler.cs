@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System;
-
 using Mono.Data.Sqlite;
 using System.Data;
 
@@ -207,7 +206,6 @@ public class DBHandler : MonoBehaviour
     }
 
 }
-
 
 [Serializable]
 public class DB

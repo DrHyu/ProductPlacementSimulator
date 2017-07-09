@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class MiscFunc : MonoBehaviour
 {
@@ -10,7 +10,7 @@ public class MiscFunc : MonoBehaviour
         Vector2 perpendicular = new Vector2(-dir.y, dir.x);
 
 
-        if (!Drag3D.IntersectRay2DvsSegment(point, perpendicular, segmentStart, segmentEnd, out intersection))
+        if (!IntersectRay2DvsSegment(point, perpendicular, segmentStart, segmentEnd, out intersection))
         {
             return false;
         }
@@ -96,4 +96,153 @@ public class MiscFunc : MonoBehaviour
        return point; // return it
     }
 
+
+    public static bool Intersects(Vector p, Vector p2, Vector q, Vector q2, out Vector intersection, bool considerCollinearOverlapAsIntersect = false)
+    {
+        intersection = new Vector();
+
+        var r = p2 - p;
+        var s = q2 - q;
+        var rxs = r.Cross(s);
+        var qpxr = (q - p).Cross(r);
+
+        // If r x s = 0 and (q - p) x r = 0, then the two lines are collinear.
+        if (rxs.IsZero() && qpxr.IsZero())
+        {
+            // 1. If either  0 <= (q - p) * r <= r * r or 0 <= (p - q) * s <= * s
+            // then the two lines are overlapping,
+            if (considerCollinearOverlapAsIntersect)
+                if ((0 <= (q - p) * r && (q - p) * r <= r * r) || (0 <= (p - q) * s && (p - q) * s <= s * s))
+                    return true;
+
+            // 2. If neither 0 <= (q - p) * r = r * r nor 0 <= (p - q) * s <= s * s
+            // then the two lines are collinear but disjoint.
+            // No need to implement this expression, as it follows from the expression above.
+            return false;
+        }
+
+        // 3. If r x s = 0 and (q - p) x r != 0, then the two lines are parallel and non-intersecting.
+        if (rxs.IsZero() && !qpxr.IsZero())
+            return false;
+
+        // t = (q - p) x s / (r x s)
+        var t = (q - p).Cross(s) / rxs;
+
+        // u = (q - p) x r / (r x s)
+
+        var u = (q - p).Cross(r) / rxs;
+
+        // 4. If r x s != 0 and 0 <= t <= 1 and 0 <= u <= 1
+        // the two line segments meet at the point p + t r = q + u s.
+        if (!rxs.IsZero() && (0 <= t && t <= 1) && (0 <= u && u <= 1))
+        {
+            // We can calculate the intersection point using either t or u.
+            intersection = p + t * r;
+
+            // An intersection was found.
+            return true;
+        }
+
+        // 5. Otherwise, the two line segments are not parallel but do not intersect.
+        return false;
+    }
+
+    public static Vector2[] DoBezier(Vector2[] v, int _order, int _resolution)
+    {
+
+        List<Vector2> result = new List<Vector2>();
+
+        Ray2D[] r1 = new Ray2D[_order];
+        Ray2D[] r2 = new Ray2D[_order];
+
+        Vector2[] v1 = new Vector2[_order + 1];
+        Vector2[] v2 = new Vector2[_order + 1];
+
+        for (int i = 0; i < v.Length - _order; i += 2)
+        {
+            for (int x = 0; x < _resolution; x++)
+            {
+                // Calculate for the initial "order" iteration
+                for (int o = 0; o < _order; o++)
+                {
+                    Vector2 deb = v[o + i + 1] - v[o + i];
+                    r1[o] = new Ray2D(v[o + i], deb);
+                }
+                for (int o = 0; o < _order + 1; o++)
+                {
+                    v1[o] = v[i + o];
+                }
+
+                for (int order = _order; order > 0; order--)
+                {
+                    for (int p = 0; p < order; p++)
+                    {
+                        v2[p] = r1[p].GetPoint((v1[p + 1] - v1[p]).magnitude * (float)((float)x / _resolution));
+                    }
+                    for (int p = 0; p < order - 1; p++)
+                    {
+                        r2[p] = new Ray2D(v2[p], v2[p + 1] - v2[p]);
+                    }
+
+                    //Clean up for next iteration
+                    for (int p = 0; p < order; p++) { v1[p] = v2[p]; }
+                    for (int p = 0; p < order - 1; p++) { r1[p] = r2[p]; }
+                }
+
+                result.Add(v1[0]);
+            }
+        }
+
+        return result.ToArray();
+    }
+
+
+    public static bool IntersectRay2D(Vector2 p, Vector2 r, Vector2 q, Vector2 s, out Vector2 isc)
+    {
+        float rxs = r.Cross(s);
+        float qminpxr = (q - p).Cross(r);
+
+        // They are coolinear
+        if (rxs == 0 && qminpxr == 0)
+        {
+            isc = p + r;
+            return true;
+        }
+        // They are parallel
+        else if (rxs == 0 && qminpxr != 0)
+        {
+            isc = new Vector2(0, 0);
+            return false;
+        }
+        else
+        {
+            float u = qminpxr / (rxs);
+
+            isc = q + u * s;
+            return true;
+        }
+    }
+
+    public static bool IntersectRay2DvsSegment(Vector2 p, Vector2 r, Vector2 a, Vector2 b, out Vector2 isc)
+    {
+        Vector2 dir = b - a;
+
+        if (IntersectRay2D(p, r, a, dir, out isc))
+        {
+            // if (a <= isc <= b || a >= isc >= b)
+            if (((a.x <= isc.x && b.x >= isc.x) || (a.x >= isc.x && b.x <= isc.x)) && ((a.y <= isc.y && b.y >= isc.y) || (a.y >= isc.y && b.y <= isc.y)))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+
+    }
 }

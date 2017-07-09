@@ -26,6 +26,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     // Used to keep history of the last valid position and index to recover in case of a failed drag
     private Vector3 last_position;
     private int last_index = 0;
+    private float last_pos_rel = 0;
 
     // The position of the cube is stored as:
     //  1. Index of the vertex in the dragline
@@ -34,6 +35,10 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
 
     private float distance;
+    private float startDragTime;
+
+    // Drag speed/s
+    public float DRAG_SPEED = 5f;
 
     public Vector3[] globalDragLines;
     public Vector3[] localDragLines;
@@ -58,18 +63,19 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
         if(dragging)
         {
-            //Calcualte the estimaded mouse position in the 3D space
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            Vector3 mousePos3D = ray.GetPoint(distance);
 
-            // Transform to local coordinates
-            mousePos3D = transform.parent.InverseTransformPoint(mousePos3D);
+            //int next_index;
+            //// Try the new position
+            //transform.localPosition = getClosestPointInCurrentLine(mousePos3D, this_box.current_index, out next_index);
 
-            int next_index;
-            // Try the new position
-            transform.localPosition = getClosestPointInCurrentLine(mousePos3D, this_box.current_index, out next_index);
+            //this_box.current_index = next_index;
 
-            this_box.current_index = next_index;
+            //Debug.Log("3 C_INDEX: " + this_box.current_index + " C_POS: " + this_box.current_pos_relative );
+            CalculateNextPosition(this_box.current_index, this_box.current_pos_relative, ref this_box.current_index, ref this_box.current_pos_relative);
+            //Debug.Log("4 C_INDEX: " + this_box.current_index + " C_POS: " + this_box.current_pos_relative);
+
+
+            transform.localPosition = localDragLines[this_box.current_index] + (localDragLines[this_box.current_index + 1] - localDragLines[this_box.current_index]) * this_box.current_pos_relative;
 
             // This box moved so the other collision maps are no longer valid
             GetComponentInParent<ShelfGenerator>().InvalideChildCollisionMaps(gameObject.GetInstanceID());
@@ -93,7 +99,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
             if (cm.AmICollided(gameObject.GetInstanceID(), out collided_with))
             {
                 collided = true;
-                updateColor();
+                UpdateColor();
 
                 GetComponentInParent<ShelfGenerator>().NotifyCollision(collided_with, gameObject.GetInstanceID());
             }
@@ -106,10 +112,11 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
                     GetComponentInParent<ShelfGenerator>().ClearCollision();
                 }
                 collided = false;
-                updateColor();
+                UpdateColor();
 
                 // This are used to reover the last valid position if, for example, the user stops dragging a block during an intercception
                 last_index = this_box.current_index;
+                last_pos_rel = this_box.current_pos_relative;
                 last_position = transform.localPosition;
 
                 // The position of the cube is stored as:
@@ -123,7 +130,112 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     }
 
-    public void updateColor()
+    private void CalculateNextPosition(int c_index, float current_pos, ref int new_index, ref float new_pos)
+    {
+
+        //Calcualte the estimaded mouse position in the 3D space
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Vector3 mousePos3D = ray.GetPoint(distance);
+
+        // Transform to local coordinates
+        mousePos3D = transform.parent.InverseTransformPoint(mousePos3D);
+
+
+        // Speed calculations
+
+        float time_since_start_drag = (Time.time - startDragTime);
+        // if more than 1 seconds passed -> 1 factor
+        // else scaling factor
+        float time_speed_factor =  time_since_start_drag > 1 ? 1 : time_since_start_drag;
+
+        float mouse_distance_speed_factor = (mousePos3D - transform.localPosition).magnitude > 10 ? 1 : (mousePos3D - transform.localPosition).magnitude / 10f;
+        // distance_to_move_budget_in_current_frame = drag_speed * time_since_last_frame * time_speed_factor
+        // this will also be multiplied bye the mouse_position_speed_factor for each dragline
+        float distance_to_move = DRAG_SPEED * Time.deltaTime * 2 * time_speed_factor * 3 * mouse_distance_speed_factor;
+
+        
+        while(distance_to_move > 0)
+        {
+            //Debug.Log("1 C_INDEX: "+c_index+ " C_POS: " +current_pos+ " BUDGET: "+ distance_to_move);
+            MoveInDragline(ref c_index, ref current_pos, mousePos3D, ref distance_to_move);
+            //Debug.Log("2 C_INDEX: " + c_index + " C_POS: " + current_pos + " BUDGET: " + distance_to_move);
+
+        }
+        //Debug.Log("3 C_INDEX: " + c_index + " C_POS: " + current_pos + " BUDGET: " + distance_to_move);
+
+
+        new_index = c_index;
+        new_pos = current_pos;
+    }
+
+    private void MoveInDragline( ref int c_index, ref float c_pos, Vector3 towards_p, ref float move_budget)
+    {
+
+        Vector3 currentPos = localDragLines[c_index] + (localDragLines[c_index + 1] - localDragLines[c_index]) * c_pos;
+
+        // Direction of the dragline
+        Vector3 draglineDir = (localDragLines[c_index + 1] - localDragLines[c_index]).normalized;
+        // curent_point to towards_dir
+        Vector3 currentpToTowardspDir = (towards_p - currentPos).normalized;
+        // Angle inbetween both vectors
+        float alpha = Mathf.Acos(Vector3.Dot(draglineDir, currentpToTowardspDir) / (draglineDir.magnitude * currentpToTowardspDir.magnitude));
+        
+
+
+
+        // This representa how well the position of the cursor fits the direction of the current line
+        float towards_position_speed_factor = Mathf.Abs(Mathf.Cos(alpha));
+
+        // This represens if we are moiving towards the start (left) or end (right) of this dragline
+        int right_or_left = (Mathf.Cos(alpha)) >= 0 ? 1 : -1;
+
+
+
+        Vector3 dir_vector = right_or_left == 1 ? draglineDir : -draglineDir;
+
+        // If we are going to the right the distance left will be measured agains the end (c_index +1) of this dragline
+        // If we are going to the left the distance left will be measured against the start (c_index) of this dragline
+        float dist_left_in_current_dragline = right_or_left == 1 ? (localDragLines[c_index + 1] - currentPos).magnitude : (localDragLines[c_index] - currentPos).magnitude;
+
+
+        //Debug.Log("Actual move :" + move_budget * towards_position_speed_factor / (localDragLines[c_index + 1] - localDragLines[c_index]).magnitude + " RoL: " + right_or_left +" Speed fact: " + towards_position_speed_factor + " Dist left: " + dist_left_in_current_dragline + " Dist/fact: " + dist_left_in_current_dragline / towards_position_speed_factor + " budget: " + move_budget);
+
+
+        // If there isn't enough move budget to finish this dragline
+        // if towards_position_speed_factor == 0 it means that the towards point is in 90 (or 270) degrees, so we shouldnt move
+        if (towards_position_speed_factor == 0 || dist_left_in_current_dragline / towards_position_speed_factor > move_budget)
+        {
+            //c_index = c_index;
+            float moved_distance = move_budget * towards_position_speed_factor;
+
+            c_pos = c_pos + right_or_left * ( moved_distance / (localDragLines[c_index + 1] - localDragLines[c_index]).magnitude);
+            move_budget = 0;   
+        }
+        // If there is
+        else
+        {
+            if (c_index == 0 && right_or_left == -1)
+            {
+                //c_index = c_index;
+                c_pos = 0;
+                move_budget = 0;
+            }
+            else if (c_index == localDragLines.Length-2 && right_or_left == 1)
+            {
+                //c_index == c_index
+                c_pos = 1;
+                move_budget = 0;
+            }
+            else
+            {
+                c_index = c_index + right_or_left;
+                c_pos = right_or_left == -1 ? 1 : 0;
+                move_budget = move_budget - (dist_left_in_current_dragline / towards_position_speed_factor);
+            }
+        }
+    }
+
+    public void UpdateColor()
     {
         if (collided_upon)
         {
@@ -158,13 +270,13 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     {
         
         // Re-calulate the local drag lines based on the new scale of the object
-        offsetDraglineByCubeSize();
+        OffsetDraglineByCubeSize();
         CalculateNormals();
 
         transform.localPosition = localDragLines[this_box.current_index];
     }
 
-    public void OnPointerUp(PointerEventData eventData)
+    public void OnPointerUp(PointerEventData eventData) 
     {
         if (collided)
         {
@@ -172,17 +284,20 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
             GetComponentInParent<ShelfGenerator>().ClearCollision();
             transform.localPosition = last_position;
             this_box.current_index = last_index;
+            this_box.current_pos_relative = last_pos_rel;
             collided = false;
         }
         dragging = false;
-        updateColor();
+        UpdateColor();
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
         distance = Vector3.Distance(GetComponent<Transform>().position, Camera.main.transform.position);
         dragging = true;
-        updateColor();
+        UpdateColor();
+
+        startDragTime = Time.time;
     }
 
     private void OnCollisionEnter(Collision c)
@@ -261,32 +376,8 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         }
     }
 
-    private void findNextEmptySpace(GameObject other_cube)
+    private void FindNextEmptySpace(GameObject other_cube)
     {
-        //Figure out what direction we are going
-        Vector3 dir = other_cube.transform.position - transform.position;
-
-        Ray MyRay = new Ray(transform.position,dir);
-        RaycastHit MyRayHit;
-        Physics.Raycast(MyRay, out MyRayHit);
-        Vector3 MyNormal = MyRayHit.normal;
-        MyNormal = MyRayHit.transform.TransformDirection(MyNormal);
-
-        // Hit right
-        if (MyNormal == MyRayHit.transform.right)
-        {
-            
-        }
-        // Hit left
-        else if (MyNormal == -MyRayHit.transform.right)
-        {
-            
-        }
-        else
-        {
-            Debug.LogError("Din't hit either right or left", this);
-        }
-
 
         
     }
@@ -297,21 +388,21 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         transform.localScale = new Vector3(b.width, b.height, b.depth);
 
         globalDragLines = _dragLines;
-        offsetDraglineByCubeSize();
+        OffsetDraglineByCubeSize();
         CalculateNormals();
 
         transform.localPosition = localDragLines[this_box.current_index] + (localDragLines[this_box.current_index + 1] - localDragLines[this_box.current_index]) * this_box.current_pos_relative;
 
     }
 
-    public void setDragline(Vector3[] _dragLines)
+    public void SetDragline(Vector3[] _dragLines)
     {
         globalDragLines = _dragLines;
-        offsetDraglineByCubeSize();
+        OffsetDraglineByCubeSize();
         CalculateNormals();
     }
 
-    private void offsetDraglineByCubeSize()
+    private void OffsetDraglineByCubeSize()
     {
 
         /* Diferent size of cubes requires diferent draglines
@@ -344,12 +435,14 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         normals = new Vector2[localDragLines.Length];
         for (int i = 0; i < localDragLines.Length - 1; i++)
         {
-            Vector2 perpendicular = PerpendicularClockwise(localDragLines[i + 1].to2DwoY() - localDragLines[i].to2DwoY());
+            Vector2 perpendicular = (localDragLines[i + 1].to2DwoY() - localDragLines[i].to2DwoY()).PerpClockWise();
             perpendicular.Normalize();
 
             normals[i] = perpendicular;
         }
     }
+
+
 
     private Vector3 getClosestPointInCurrentLine(Vector3 point, int c_index, out int n_index)
     {
@@ -440,116 +533,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     /* - - - - - STATIC METHODS - - - - - */
 
-    public static Vector2 PerpendicularClockwise(Vector2 vector2)
-    {
-        return new Vector2(-vector2.y, vector2.x);
-    }
-
-    public static Vector2 PerpendicularCounterClockwise(Vector2 vector2)
-    {
-        return new Vector2(vector2.y, -vector2.x);
-    }
-
-    public static bool Intersects(Vector p, Vector p2, Vector q, Vector q2, out Vector intersection, bool considerCollinearOverlapAsIntersect = false)
-    {
-        intersection = new Vector();
-
-        var r = p2 - p;
-        var s = q2 - q;
-        var rxs = r.Cross(s);
-        var qpxr = (q - p).Cross(r);
-
-        // If r x s = 0 and (q - p) x r = 0, then the two lines are collinear.
-        if (rxs.IsZero() && qpxr.IsZero())
-        {
-            // 1. If either  0 <= (q - p) * r <= r * r or 0 <= (p - q) * s <= * s
-            // then the two lines are overlapping,
-            if (considerCollinearOverlapAsIntersect)
-                if ((0 <= (q - p) * r && (q - p) * r <= r * r) || (0 <= (p - q) * s && (p - q) * s <= s * s))
-                    return true;
-
-            // 2. If neither 0 <= (q - p) * r = r * r nor 0 <= (p - q) * s <= s * s
-            // then the two lines are collinear but disjoint.
-            // No need to implement this expression, as it follows from the expression above.
-            return false;
-        }
-
-        // 3. If r x s = 0 and (q - p) x r != 0, then the two lines are parallel and non-intersecting.
-        if (rxs.IsZero() && !qpxr.IsZero())
-            return false;
-
-        // t = (q - p) x s / (r x s)
-        var t = (q - p).Cross(s) / rxs;
-
-        // u = (q - p) x r / (r x s)
-
-        var u = (q - p).Cross(r) / rxs;
-
-        // 4. If r x s != 0 and 0 <= t <= 1 and 0 <= u <= 1
-        // the two line segments meet at the point p + t r = q + u s.
-        if (!rxs.IsZero() && (0 <= t && t <= 1) && (0 <= u && u <= 1))
-        {
-            // We can calculate the intersection point using either t or u.
-            intersection = p + t * r;
-
-            // An intersection was found.
-            return true;
-        }
-
-        // 5. Otherwise, the two line segments are not parallel but do not intersect.
-        return false;
-    }
-
-    public static Vector2[] doBezier(Vector2[] v, int _order, int _resolution)
-    {
-
-        List<Vector2> result = new List<Vector2>();
-
-        Ray2D[] r1 = new Ray2D[_order];
-        Ray2D[] r2 = new Ray2D[_order];
-
-        Vector2[] v1 = new Vector2[_order + 1];
-        Vector2[] v2 = new Vector2[_order + 1];
-
-        for (int i = 0; i < v.Length - _order; i += 2)
-        {
-            for (int x = 0; x < _resolution; x++)
-            {
-                // Calculate for the initial "order" iteration
-                for (int o = 0; o < _order; o++)
-                {
-                    Vector2 deb = v[o + i + 1] - v[o+i];
-                    r1[o] = new Ray2D(v[o + i], deb);
-                }
-                for (int o = 0; o < _order + 1; o++)
-                {
-                    v1[o] = v[i + o];
-                }
-
-                for (int order = _order; order > 0; order--)
-                {
-                    for (int p = 0; p < order; p++)
-                    {
-                        v2[p] = r1[p].GetPoint((v1[p + 1] - v1[p]).magnitude * (float) ((float)x / _resolution));
-                    }
-                    for (int p = 0; p < order - 1; p++)
-                    {
-                        r2[p] = new Ray2D(v2[p], v2[p + 1] - v2[p]);
-                    }
-
-                    //Clean up for next iteration
-                    for (int p = 0; p < order; p++) { v1[p] = v2[p]; }
-                    for (int p = 0; p < order - 1; p++) { r1[p] = r2[p]; }
-                }
-
-                result.Add(v1[0]);
-            }
-        }
-
-        return result.ToArray();
-    }
-
-    public static Vector3[] CalculateDragLines(Vector3[] points, float offset, out int[] vtxRltn, bool doBeizer = false )
+    public static Vector3[] CalculateDragLines(Vector3[] points, float offset, out int[] vtxRltn, bool doBeizer = false)
     {
 
         if (points.Length == 2)
@@ -560,7 +544,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
             Vector2 o1o2 = o2 - o1;
 
-            Vector2 po1o2 = PerpendicularClockwise(o1o2);
+            Vector2 po1o2 = o1o2.PerpClockWise();
             po1o2.Normalize();
 
             Vector2 n1 = o1 - po1o2 * offset;
@@ -587,7 +571,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
             Vector2 o1o2 = o2 - o1;
 
-            Vector2 po1o2 = PerpendicularClockwise(o1o2);
+            Vector2 po1o2 = o1o2.PerpClockWise();
             po1o2.Normalize();
 
             Vector2 n1 = o1 - po1o2 * offset;
@@ -607,7 +591,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
                 Vector2 o2o3 = o3 - o2;
 
-                Vector2 po2o3 = PerpendicularClockwise(o2o3);
+                Vector2 po2o3 = o2o3.PerpClockWise();
 
                 po2o3.Normalize();
 
@@ -615,7 +599,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
                 Vector2 n4 = o3 - po2o3 * offset;
 
                 Vector output;
-                if (Intersects(n1.toV(), n2.toV(), n3.toV(), n4.toV(), out output))
+                if (MiscFunc.Intersects(n1.toV(), n2.toV(), n3.toV(), n4.toV(), out output))
                 {
                     Vector2 isc = output.toV2();
                     Vector2 n5 = new Ray2D(n1, isc - n1).GetPoint((isc - n1).magnitude - (n2 - isc).magnitude);
@@ -623,7 +607,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
                     if (doBeizer)
                     {
-                        Vector2[] res = doBezier(new Vector2[] { n5, isc, n6 }, 2, 40);
+                        Vector2[] res = MiscFunc.DoBezier(new Vector2[] { n5, isc, n6 }, 2, 40);
 
                         for (int p = 0; p < res.Length; p++)
                         {
@@ -645,7 +629,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
                 else
                 {
                     Vector2 isc;
-                    if (!IntersectRay2D(n1, n2 - n1, n4, n3 - n4, out isc))
+                    if (!MiscFunc.IntersectRay2D(n1, n2 - n1, n4, n3 - n4, out isc))
                     {
                         Debug.LogError("Did not intersect");
                     }
@@ -653,7 +637,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
                     if (doBeizer)
                     {
 
-                        Vector2[] res = doBezier(new Vector2[] { n2, isc, n3 }, 2, 20);
+                        Vector2[] res = MiscFunc.DoBezier(new Vector2[] { n2, isc, n3 }, 2, 20);
 
                         for (int p = 0; p < res.Length; p++)
                         {
@@ -686,55 +670,6 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
             return newDragline.ToArray();
         }
-    }
-
-    public static bool IntersectRay2D(Vector2 p, Vector2 r, Vector2 q, Vector2 s, out Vector2 isc)
-    {
-        float rxs = r.Cross(s);
-        float qminpxr = (q - p).Cross(r);
-
-        // They are coolinear
-        if(rxs == 0 && qminpxr == 0)
-        {
-            isc = p+r;
-            return true;
-        }
-        // They are parallel
-        else if(rxs == 0 && qminpxr != 0)
-        {
-            isc = new Vector2(0,0);
-            return false;
-        }
-        else
-        {
-            float u = qminpxr / (rxs);
-
-            isc = q + u * s;
-            return true;
-        }
-    }
-
-    public static bool IntersectRay2DvsSegment(Vector2 p, Vector2 r, Vector2 a, Vector2 b, out Vector2 isc)
-    {
-        Vector2 dir = b - a;
-
-        if (IntersectRay2D(p, r, a, dir, out isc))
-        {
-            // if (a <= isc <= b || a >= isc >= b)
-            if(((a.x <= isc.x && b.x >= isc.x) || (a.x >= isc.x && b.x <= isc.x)) && ((a.y <= isc.y && b.y >= isc.y) || (a.y >= isc.y && b.y <= isc.y)))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else
-        {
-            return false;
-        }
-        
     }
 
 
