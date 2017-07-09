@@ -174,17 +174,15 @@ public class UIController : MonoBehaviour {
     public void OnSearchFieldChanged(string search)
     {
         search = searchField.text;
-        search = ".*" + search + ".*";
-        Regex regex = new Regex(search, RegexOptions.IgnoreCase);
-        // search in db 
 
+        // search in db 
         if (search == "")
         {
             InitializeDBStuff(DBH.ReadFullDB());
         }
         else
         {
-            InitializeDBStuff(DBH.SearchItemByName(searchField.text));
+            InitializeDBStuff(DBH.SearchItemByName(search));
         }
         
     }

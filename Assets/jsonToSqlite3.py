@@ -64,13 +64,13 @@ if __name__ == '__main__':
 	# newProds = readJSON(jsonFile)
 	# print newProds
 	# insertInDB(newProds["contents"], database)
-	readDB = readFromDB(database)
-	print readDB
+	# readDB = readFromDB(database)
+	# print readDB
 	# ----------------------------------------
 
 
 	# arg[0] is json File, arg[1] is db File
-	# try:
-	# 	insertJSONintoDB(sys.argv[1], sys.argv[2])
+	#try:
+	insertJSONintoDB(sys.argv[1], sys.argv[2])
 	# except:
-	# 	print "Not enough arguments, wrong order, or wrong json format"
+	# 	print("Not enough arguments, wrong order, or wrong json format")

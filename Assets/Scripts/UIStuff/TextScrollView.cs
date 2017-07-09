@@ -21,7 +21,6 @@ public class TextScrollView : CallBackRegisterableClass {
     private List<bool> entry_selected;
     private int last_entry_selected; 
 
-
     private void Initialize()
     {
         texts = new List<GameObject>();

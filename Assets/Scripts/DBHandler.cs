@@ -18,7 +18,8 @@ public class DBHandler : MonoBehaviour
     public string DB_PATH;
     private DB full_db;
 
-    private const string SELECT_ALL = "SELECT ID, NAME, WIDTH, HEIGHT, DEPTH ";
+    private const string SELECT_ALL = " SELECT ID, NAME, WIDTH, HEIGHT, DEPTH ";
+    private const string PRODUCT_TABLE = " FROM Product ";
 
     private IDbConnection dbconn;
 
@@ -95,7 +96,7 @@ public class DBHandler : MonoBehaviour
         IDbCommand dbcmd = dbconn.CreateCommand();
 
         // Partial coincidence query
-        string sqlQuery = SELECT_ALL + "FROM Product" + " WHERE ID = @param";
+        string sqlQuery = SELECT_ALL + PRODUCT_TABLE + " WHERE ID = @param";
         dbcmd.CommandText = sqlQuery;
         // Requires % around search word to look for it in any substring of the products' names
         dbcmd.Parameters.Add(new SqliteParameter("@param", ID));
@@ -147,7 +148,7 @@ public class DBHandler : MonoBehaviour
         IDbCommand dbcmd = dbconn.CreateCommand();
         
         // Partial coincidence query
-        string sqlQuery = SELECT_ALL + "FROM Product" + " WHERE NAME LIKE @param";
+        string sqlQuery = SELECT_ALL + PRODUCT_TABLE + " WHERE NAME LIKE @param"; // + " GROUP BY NAME"; // This returns distinct name entry (newest with same name)
         dbcmd.CommandText = sqlQuery;
         // Requires % around search word to look for it in any substring of the products' names
         dbcmd.Parameters.Add(new SqliteParameter("@param", "%"+search+"%"));
@@ -167,7 +168,7 @@ public class DBHandler : MonoBehaviour
 
             DBItem temp = new DBItem();
 
-            Debug.Log("found = " + name);
+            Debug.Log("found = " + name+ " " + id);
 
             temp.ID = id;
             temp.name = name;
