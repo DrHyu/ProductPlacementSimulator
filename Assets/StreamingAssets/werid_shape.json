@@ -1,1 +1,71 @@
-{"stands":[{"name":"weird_stand","x_start":20.0,"y_start":4.0,"z_start":10.0,"y_rotation":0.0,"shelves":[{"name":"Shelf","absolute_height":1.2999999523162842,"relative_height":1.2999999523162842,"thickness":0.20000000298023225,"front_index":[0,1,2,3,4,5,6,0],"x_points":[0.0,0.0,6.0,10.0,14.0,10.0,14.0],"y_points":[0.0,10.0,10.0,14.0,10.0,6.0,4.0],"boxes":[{"ID":0,"name":"Oral B Prof. Care 2500","width":1.5,"height":2.0,"depth":1.0,"img_path":"","current_index":140,"current_pos_relative":0.4744953215122223},{"ID":0,"name":"Oral B Prof. Care 2500","width":1.5,"height":2.0,"depth":1.0,"img_path":"","current_index":60,"current_pos_relative":0.17882142961025239}]}],"wall_x":[],"wall_y":[]}]}
+{
+    "stands": [
+        {
+            "name": "weird_stand",
+            "x_start": 20.0,
+            "y_start": 4.0,
+            "z_start": 10.0,
+            "y_rotation": 0.0,
+            "shelves": [
+                {
+                    "name": "Shelf",
+                    "absolute_height": 1.2999999523162842,
+                    "relative_height": 1.2999999523162842,
+                    "thickness": 0.20000000298023224,
+                    "front_index": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        0
+                    ],
+                    "x_points": [
+                        0.0,
+                        0.0,
+                        6.0,
+                        10.0,
+                        14.0,
+                        10.0,
+                        14.0
+                    ],
+                    "y_points": [
+                        0.0,
+                        10.0,
+                        10.0,
+                        14.0,
+                        10.0,
+                        6.0,
+                        4.0
+                    ],
+                    "boxes": [
+                        {
+                            "ID": 0,
+                            "name": "Oral B Prof. Care 2500",
+                            "width": 1.5,
+                            "height": 2.0,
+                            "depth": 1.0,
+                            "img_path": "",
+                            "current_index": 140,
+                            "current_pos_relative": 0.4744953215122223
+                        },
+                        {
+                            "ID": 0,
+                            "name": "Oral B Prof. Care 2500",
+                            "width": 1.5,
+                            "height": 2.0,
+                            "depth": 1.0,
+                            "img_path": "",
+                            "current_index": 60,
+                            "current_pos_relative": 0.17882142961025238
+                        }
+                    ]
+                }
+            ],
+            "wall_x": [],
+            "wall_y": []
+        }
+    ]
+}

@@ -20,6 +20,8 @@ public class UIController : MonoBehaviour {
     public DBHandler DBH;
     public DB myDB;
 
+    public PreviewController previewController;
+
     public UItoSimulation _UItoSimulation;
 
     private List<StandGenerator> standList;
@@ -169,6 +171,8 @@ public class UIController : MonoBehaviour {
     public void OnDBListerIndexChanged(int index)
     {
         dbIndex = index;
+        BoxJSON boxjson = new BoxJSON(DBH.SearchItemByID(index));
+        previewController.previewBox(boxjson);
     }
 
     public void OnSearchFieldChanged(string search)

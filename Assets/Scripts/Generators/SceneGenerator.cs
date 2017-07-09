@@ -18,7 +18,6 @@ public class SceneGenerator : MonoBehaviour
     
     void Start()
     {
-        JSONPath = Path.Combine(Application.streamingAssetsPath, JSONPath);
 
         if (AUTOSTART)
         {
@@ -28,7 +27,9 @@ public class SceneGenerator : MonoBehaviour
 
     public void GenerateScene(string JSONName)
     {
-        SceneData sc = LoadShelfData(JSONName);
+        JSONPath = Path.Combine(Application.streamingAssetsPath, JSONName);
+
+        SceneData sc = LoadShelfData(JSONPath);
         GenerateScene(sc);
     }
 
