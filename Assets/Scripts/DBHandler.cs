@@ -17,7 +17,7 @@ public class DBHandler : MonoBehaviour
     public string DB_PATH;
     private DB full_db;
 
-    private const string SELECT_ALL = " SELECT ID, NAME, WIDTH, HEIGHT, DEPTH ";
+    private const string SELECT_ALL = " SELECT ID, NAME, WIDTH, HEIGHT, DEPTH, IMG_PATH ";
     private const string PRODUCT_TABLE = " FROM Product ";
 
     private IDbConnection dbconn;
@@ -41,7 +41,7 @@ public class DBHandler : MonoBehaviour
             IDbCommand dbcmd = dbconn.CreateCommand();
 
             // Straightforward query to get all elements
-            string sqlQuery = "SELECT ID, NAME, WIDTH, HEIGHT, DEPTH " + "FROM Product";
+            string sqlQuery = SELECT_ALL + PRODUCT_TABLE;
             dbcmd.CommandText = sqlQuery;
 
             List<DBItem> items = new List<DBItem>();
@@ -55,6 +55,8 @@ public class DBHandler : MonoBehaviour
                 float width = reader.GetFloat(2);
                 float height = reader.GetFloat(3);
                 float depth = reader.GetFloat(4);
+                string img_path = reader.GetString(5);
+
 
                 Debug.Log("id = " + id + "  with name =" + name + "  and dimensions(w,h,d) = (" + width + ", "+height+", "+depth+")");
 
@@ -65,6 +67,7 @@ public class DBHandler : MonoBehaviour
                 aux.width = width;
                 aux.height = height;
                 aux.depth = depth;
+                aux.img_path = img_path;
 
                 items.Add(aux);
             }
@@ -113,6 +116,7 @@ public class DBHandler : MonoBehaviour
             float width = reader.GetFloat(2);
             float height = reader.GetFloat(3);
             float depth = reader.GetFloat(4);
+            string img_path = reader.GetString(5);
 
             Debug.Log("found = " + name);
 
@@ -121,6 +125,7 @@ public class DBHandler : MonoBehaviour
             aux.width = width;
             aux.height = height;
             aux.depth = depth;
+            aux.img_path = img_path;
             
         }
 
@@ -164,6 +169,7 @@ public class DBHandler : MonoBehaviour
             float width = reader.GetFloat(2);
             float height = reader.GetFloat(3);
             float depth = reader.GetFloat(4);
+            string img_path = reader.GetString(5);
 
             DBItem temp = new DBItem();
 
@@ -174,6 +180,7 @@ public class DBHandler : MonoBehaviour
             temp.width = width;
             temp.height = height;
             temp.depth = depth;
+            temp.img_path = img_path;
 
             cntents.Add(temp);
         }

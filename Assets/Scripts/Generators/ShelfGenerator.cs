@@ -92,12 +92,15 @@ public class ShelfGenerator : MonoBehaviour
 
     public void GenerateProduct(BoxJSON box)
     {
+        Material transparent_m = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
+
         // TODO: Need to actually edit the boxes array
         GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         go.name = box.name;
         cubes.Add(go);
         productList.Add(box);
         go.transform.SetParent(transform);
+        go.GetComponent<MeshRenderer>().material = transparent_m;
 
         Drag3D d3d = go.AddComponent(typeof(Drag3D)) as Drag3D;
         // TODO Child ID needs to be revised
@@ -115,11 +118,13 @@ public class ShelfGenerator : MonoBehaviour
         float alpha = shelf_mesh.GetComponent<Renderer>().material.color.a;
         if (selected)
         {
-            shelf_mesh.GetComponent<Renderer>().material.color = new Color(0.4f, 1f, 0.8f, alpha);
+            shelf_mesh.GetComponent<MeshRenderer>().material = Resources.Load("Materials/StandardNonTransparent", typeof(Material)) as Material;
+            shelf_mesh.GetComponent<MeshRenderer>().material.color = new Color(0.4f, 1f, 0.8f, alpha);
         }
         else
         {
-            shelf_mesh.GetComponent<Renderer>().material.color = new Color(1f, 1f, 1f, alpha);
+            shelf_mesh.GetComponent<MeshRenderer>().material = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
+            shelf_mesh.GetComponent<MeshRenderer>().material.color = new Color(1f, 1f, 1f, alpha);
         }
     }
 

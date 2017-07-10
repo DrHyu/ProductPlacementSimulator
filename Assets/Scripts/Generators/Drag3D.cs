@@ -33,7 +33,6 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     //  2. magnitude(current_3d_pos - dragLine[c_index])/ magnitude(dragLine[c_index+1] - dragLine[c_index])
     // Stored this way to allow the stands to be rotated and/or scaled while maintaining the relative position of this cube
 
-
     private float distance;
     private float startDragTime;
 
@@ -51,11 +50,27 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     private void Start()
     {
-        // Make sure it is at the very start 
-        GetComponent<Renderer>().material  = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
-        GetComponent<Renderer>().material.color = originalColor;
+        if (this_box.img_path != null)
+        {
+            // Make sure it is at the very start 
+            GetComponent<Renderer>().material = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
+            GetComponent<Renderer>().material.color = originalColor;
 
-        last_position = transform.localPosition;
+            last_position = transform.localPosition;
+
+            GameObject imageHolder = GameObject.CreatePrimitive(PrimitiveType.Plane);
+
+            imageHolder.transform.parent = transform;
+            imageHolder.transform.localPosition = new Vector3(0, 0, 0.51f);
+            imageHolder.transform.eulerAngles = new Vector3(90, 0, 0);
+            imageHolder.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+
+            imageHolder.GetComponent<MeshCollider>().enabled = false;
+
+            Material mat = new Material(Resources.Load("Materials/PictureMaterial", typeof(Material)) as Material);
+            mat.mainTexture = Resources.Load(this_box.img_path, typeof(Texture)) as Texture;
+            imageHolder.GetComponent<MeshRenderer>().material = mat;
+        }
     }
 
     void Update()
@@ -156,10 +171,12 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         
         while(distance_to_move > 0)
         {
+            float move_budget = distance_to_move;
             //Debug.Log("1 C_INDEX: "+c_index+ " C_POS: " +current_pos+ " BUDGET: "+ distance_to_move);
             MoveInDragline(ref c_index, ref current_pos, mousePos3D, ref distance_to_move);
             //Debug.Log("2 C_INDEX: " + c_index + " C_POS: " + current_pos + " BUDGET: " + distance_to_move);
 
+            if(move_budget == distance_to_move){break;}
         }
         //Debug.Log("3 C_INDEX: " + c_index + " C_POS: " + current_pos + " BUDGET: " + distance_to_move);
 
@@ -384,6 +401,7 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     public void Initialize(BoxJSON b, Vector3[] _dragLines)
     {
+
         this_box = b;
         transform.localScale = new Vector3(b.width, b.height, b.depth);
 

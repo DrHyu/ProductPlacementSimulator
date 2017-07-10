@@ -30,7 +30,7 @@ public class PreviewController : MonoBehaviour {
         camera.transform.localPosition = new Vector3(0, 0, -sum/2 -3);
 
         ShelfJSON shelf_json = new ShelfJSON();
-        shelf_json.front_index = new int[] { 0, 1, 2, 3, 0 };
+        shelf_json.front_index = new int[] { 3, 0, 1, 2, 3 };
         shelf_json.x_points = new float[] { -shelf_size, -shelf_size, shelf_size, shelf_size };
         shelf_json.y_points = new float[] { -shelf_size, shelf_size, shelf_size, -shelf_size };
         shelf_json.boxes = box == null ? new BoxJSON[0] : new BoxJSON[] { box };

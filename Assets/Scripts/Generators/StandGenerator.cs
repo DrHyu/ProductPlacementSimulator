@@ -245,7 +245,7 @@ public class StandGenerator : MonoBehaviour
             {
                 Color c = child.GetComponent<Renderer>().material.color;
                 c.a = a;
-                child.GetComponent<Renderer>().material = m;
+                //child.GetComponent<Renderer>().material = m;
                 child.GetComponent<Renderer>().material.color = c;
 
             }
