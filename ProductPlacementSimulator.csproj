@@ -108,6 +108,7 @@
     <Compile Include="Assets\Scripts\Generators\Drag3D.cs" />
     <Compile Include="Assets\Scripts\Generators\MeshGenerator.cs" />
     <Compile Include="Assets\Scripts\Generators\MiscFunc.cs" />
+    <Compile Include="Assets\Scripts\Generators\ProductAesthetics.cs" />
     <Compile Include="Assets\Scripts\Generators\SceneGenerator.cs" />
     <Compile Include="Assets\Scripts\Generators\ShelfGenerator.cs" />
     <Compile Include="Assets\Scripts\Generators\StandGenerator.cs" />

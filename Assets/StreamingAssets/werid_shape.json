@@ -44,22 +44,29 @@
                         {
                             "ID": 0,
                             "name": "Oral B Prof. Care 2500",
-                            "width": 1.5,
-                            "height": 2.0,
+                            "width": 1.0,
+                            "height": 1.0,
                             "depth": 1.0,
                             "img_path": "",
-                            "current_index": 140,
-                            "current_pos_relative": 0.4744953215122223
+                            "current_index": 0,
+                            "current_pos_relative": 0.4744953215122223,
+							"x_repeats": 1,
+							"y_repeats": 2,
+							"z_repeats": 3
+							
                         },
                         {
                             "ID": 0,
                             "name": "Oral B Prof. Care 2500",
-                            "width": 1.5,
-                            "height": 2.0,
+                            "width": 1.0,
+                            "height": 1.0,
                             "depth": 1.0,
                             "img_path": "",
-                            "current_index": 60,
-                            "current_pos_relative": 0.17882142961025238
+                            "current_index": 0,
+                            "current_pos_relative": 0.17882142961025238,
+							"x_repeats": 3,
+							"y_repeats": 1,
+							"z_repeats": 2
                         }
                     ]
                 }

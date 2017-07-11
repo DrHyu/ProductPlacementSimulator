@@ -63,12 +63,13 @@ public class BoxJSON : DBItem
 
         this.name = ref_item.name;
         this.img_path = ref_item.img_path;
-
-        this.actual_width = ref_item.width;
-        this.actual_height = ref_item.height;
-        this.actual_depth = ref_item.depth;
     }
 
+<<<<<<< Updated upstream
+    public int x_repeats;
+    public int y_repeats;
+    public int z_repeats;
+=======
     public float actual_width;
     public float actual_height;
     public float actual_depth;
@@ -76,7 +77,7 @@ public class BoxJSON : DBItem
     public int x_repeats = 1;
     public int y_repeats = 1;
     public int z_repeats = 1;
-
+>>>>>>> Stashed changes
 
     public int current_index;
     public float current_pos_relative;

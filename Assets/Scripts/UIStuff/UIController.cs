@@ -133,7 +133,12 @@ public class UIController : MonoBehaviour {
 
     public void OnAddButtonPressed()
     {
-        _UItoSimulation.AddProduct(stand_dropdown_index, shelf_dropdown_index, myDB.contents[dbIndex].ID);
+        BoxJSON b = new BoxJSON(myDB.contents[dbIndex]);
+        b.x_repeats = stack_x;
+        b.y_repeats = stack_y;
+        b.z_repeats = stack_z;
+
+        _UItoSimulation.AddProduct(stand_dropdown_index, shelf_dropdown_index, b);
 
         if (productIndexes != null && productIndexes.Length > 0)
         {

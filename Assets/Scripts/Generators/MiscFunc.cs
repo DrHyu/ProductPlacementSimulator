@@ -60,11 +60,7 @@ public class MiscFunc : MonoBehaviour
     public static bool PointInObject(Vector3 p, GameObject go)
     {
 
-
-
         p = go.transform.parent.TransformPoint(p);
-
-        BoxCollider b = go.GetComponent<BoxCollider>();
 
         Vector3[] v = GetColliderVertexPositions(go);
 

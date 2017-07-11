@@ -5,17 +5,11 @@ using System.Collections.Generic;
 using System;
 using UnityEngine.EventSystems;
 
-class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
+public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 {
     public CollisionMap cm;
 
-    private BoxJSON this_box;
-
-    private Color dragColor     = new Color(1,1,1,0.5f);
-    private Color collidedColor = new Color(1, 0, 0, 0.5f);
-    private Color collidedUponColor = new Color(0, 0, 1, 0.5f);
-    private Color selectedColor = new Color(0, 1, 0, 0.5f);
-    private Color originalColor = new Color(1, 0.91f, 0.62f, 0.5f);
+    public BoxJSON this_box;
 
     // Used to keep state machine
     public bool selected = false;
@@ -46,36 +40,11 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     // The face of the cube should always be oriented in this direction
     private Vector2[] normals;
 
+
     /* - - - - - OVERRIDE METHODS - - - - - */
 
-    private void Start()
+    private void Update()
     {
-        if (this_box.img_path != null)
-        {
-            // Make sure it is at the very start 
-            GetComponent<Renderer>().material = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
-            GetComponent<Renderer>().material.color = originalColor;
-
-            last_position = transform.localPosition;
-
-            GameObject imageHolder = GameObject.CreatePrimitive(PrimitiveType.Plane);
-
-            imageHolder.transform.parent = transform;
-            imageHolder.transform.localPosition = new Vector3(0, 0, 0.51f);
-            imageHolder.transform.eulerAngles = new Vector3(90, 0, 0);
-            imageHolder.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-
-            imageHolder.GetComponent<MeshCollider>().enabled = false;
-
-            Material mat = new Material(Resources.Load("Materials/PictureMaterial", typeof(Material)) as Material);
-            mat.mainTexture = Resources.Load(this_box.img_path, typeof(Texture)) as Texture;
-            imageHolder.GetComponent<MeshRenderer>().material = mat;
-        }
-    }
-
-    void Update()
-    {
-
         if(dragging)
         {
 
@@ -113,9 +82,8 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
             int[] collided_with;
             if (cm.AmICollided(gameObject.GetInstanceID(), out collided_with))
             {
+                if (!collided) { ExecOnMyCollisionEnterCallbacks(); }
                 collided = true;
-                UpdateColor();
-
                 GetComponentInParent<ShelfGenerator>().NotifyCollision(collided_with, gameObject.GetInstanceID());
             }
             else
@@ -125,9 +93,9 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
                 {
                     // Notify that we are not longer in collision and cubes that are "collided upon" can reset to default state
                     GetComponentInParent<ShelfGenerator>().ClearCollision();
+                    ExecOnMyCollisionExitCallbacks();
                 }
                 collided = false;
-                UpdateColor();
 
                 // This are used to reover the last valid position if, for example, the user stops dragging a block during an intercception
                 last_index = this_box.current_index;
@@ -145,136 +113,10 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     }
 
-    private void CalculateNextPosition(int c_index, float current_pos, ref int new_index, ref float new_pos)
+    private void Start()
     {
-
-        //Calcualte the estimaded mouse position in the 3D space
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        Vector3 mousePos3D = ray.GetPoint(distance);
-
-        // Transform to local coordinates
-        mousePos3D = transform.parent.InverseTransformPoint(mousePos3D);
-
-
-        // Speed calculations
-
-        float time_since_start_drag = (Time.time - startDragTime);
-        // if more than 1 seconds passed -> 1 factor
-        // else scaling factor
-        float time_speed_factor =  time_since_start_drag > 1 ? 1 : time_since_start_drag;
-
-        float mouse_distance_speed_factor = (mousePos3D - transform.localPosition).magnitude > 10 ? 1 : (mousePos3D - transform.localPosition).magnitude / 10f;
-        // distance_to_move_budget_in_current_frame = drag_speed * time_since_last_frame * time_speed_factor
-        // this will also be multiplied bye the mouse_position_speed_factor for each dragline
-        float distance_to_move = DRAG_SPEED * Time.deltaTime * 2 * time_speed_factor * 3 * mouse_distance_speed_factor;
-
-        
-        while(distance_to_move > 0)
-        {
-            float move_budget = distance_to_move;
-            //Debug.Log("1 C_INDEX: "+c_index+ " C_POS: " +current_pos+ " BUDGET: "+ distance_to_move);
-            MoveInDragline(ref c_index, ref current_pos, mousePos3D, ref distance_to_move);
-            //Debug.Log("2 C_INDEX: " + c_index + " C_POS: " + current_pos + " BUDGET: " + distance_to_move);
-
-            if(move_budget == distance_to_move){break;}
-        }
-        //Debug.Log("3 C_INDEX: " + c_index + " C_POS: " + current_pos + " BUDGET: " + distance_to_move);
-
-
-        new_index = c_index;
-        new_pos = current_pos;
-    }
-
-    private void MoveInDragline( ref int c_index, ref float c_pos, Vector3 towards_p, ref float move_budget)
-    {
-
-        Vector3 currentPos = localDragLines[c_index] + (localDragLines[c_index + 1] - localDragLines[c_index]) * c_pos;
-
-        // Direction of the dragline
-        Vector3 draglineDir = (localDragLines[c_index + 1] - localDragLines[c_index]).normalized;
-        // curent_point to towards_dir
-        Vector3 currentpToTowardspDir = (towards_p - currentPos).normalized;
-        // Angle inbetween both vectors
-        float alpha = Mathf.Acos(Vector3.Dot(draglineDir, currentpToTowardspDir) / (draglineDir.magnitude * currentpToTowardspDir.magnitude));
-        
-
-
-
-        // This representa how well the position of the cursor fits the direction of the current line
-        float towards_position_speed_factor = Mathf.Abs(Mathf.Cos(alpha));
-
-        // This represens if we are moiving towards the start (left) or end (right) of this dragline
-        int right_or_left = (Mathf.Cos(alpha)) >= 0 ? 1 : -1;
-
-
-
-        Vector3 dir_vector = right_or_left == 1 ? draglineDir : -draglineDir;
-
-        // If we are going to the right the distance left will be measured agains the end (c_index +1) of this dragline
-        // If we are going to the left the distance left will be measured against the start (c_index) of this dragline
-        float dist_left_in_current_dragline = right_or_left == 1 ? (localDragLines[c_index + 1] - currentPos).magnitude : (localDragLines[c_index] - currentPos).magnitude;
-
-
-        //Debug.Log("Actual move :" + move_budget * towards_position_speed_factor / (localDragLines[c_index + 1] - localDragLines[c_index]).magnitude + " RoL: " + right_or_left +" Speed fact: " + towards_position_speed_factor + " Dist left: " + dist_left_in_current_dragline + " Dist/fact: " + dist_left_in_current_dragline / towards_position_speed_factor + " budget: " + move_budget);
-
-
-        // If there isn't enough move budget to finish this dragline
-        // if towards_position_speed_factor == 0 it means that the towards point is in 90 (or 270) degrees, so we shouldnt move
-        if (towards_position_speed_factor == 0 || dist_left_in_current_dragline / towards_position_speed_factor > move_budget)
-        {
-            //c_index = c_index;
-            float moved_distance = move_budget * towards_position_speed_factor;
-
-            c_pos = c_pos + right_or_left * ( moved_distance / (localDragLines[c_index + 1] - localDragLines[c_index]).magnitude);
-            move_budget = 0;   
-        }
-        // If there is
-        else
-        {
-            if (c_index == 0 && right_or_left == -1)
-            {
-                //c_index = c_index;
-                c_pos = 0;
-                move_budget = 0;
-            }
-            else if (c_index == localDragLines.Length-2 && right_or_left == 1)
-            {
-                //c_index == c_index
-                c_pos = 1;
-                move_budget = 0;
-            }
-            else
-            {
-                c_index = c_index + right_or_left;
-                c_pos = right_or_left == -1 ? 1 : 0;
-                move_budget = move_budget - (dist_left_in_current_dragline / towards_position_speed_factor);
-            }
-        }
-    }
-
-    public void UpdateColor()
-    {
-        if (collided_upon)
-        {
-            GetComponent<Renderer>().material.color = collidedUponColor;
-
-        }
-        else if (collided)
-        {
-            GetComponent<Renderer>().material.color = collidedColor;
-        }
-        else if (dragging)
-        {
-            GetComponent<Renderer>().material.color = dragColor;
-        }
-        else if (selected)
-        {
-            GetComponent<Renderer>().material.color = selectedColor;
-        }
-        else
-        {
-            GetComponent<Renderer>().material.color = originalColor;
-        }
+        transform.localPosition = localDragLines[this_box.current_index] + (localDragLines[this_box.current_index + 1] - localDragLines[this_box.current_index]) * this_box.current_pos_relative;
+        last_position = transform.localPosition;
     }
 
     private void LateUpdate()
@@ -303,48 +145,19 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
             this_box.current_index = last_index;
             this_box.current_pos_relative = last_pos_rel;
             collided = false;
+            ExecOnMyCollisionExitCallbacks();
         }
         dragging = false;
-        UpdateColor();
+        ExecOnDragEndCallbaks();
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
         distance = Vector3.Distance(GetComponent<Transform>().position, Camera.main.transform.position);
         dragging = true;
-        UpdateColor();
+        ExecOnDragStartCallbaks();
 
         startDragTime = Time.time;
-    }
-
-    private void OnCollisionEnter(Collision c)
-    {
-        // Only do something if we are the ones causing the colision
-
-        //collided = true;
-    }
-
-    private void OnCollisionExit(Collision collision)
-    {
-        //collided = false;
-    }
-
-    private void OnCollisionStay(Collision collision)
-    {
-        //collided = true;
-
-    }
-
-    private void OnGUI()
-    {
-        //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        //Vector3 mousePos3D = ray.GetPoint(distance);
-
-        //GUILayout.BeginArea(new Rect(20, 20, 250, 120));
-        //GUILayout.Label("mouse position: " + Input.mousePosition);
-        //GUILayout.Label("world position: " + mousePos3D.ToString("f3"));
-        //GUILayout.Label("local position: " + transform.parent.InverseTransformPoint(mousePos3D).ToString("f3")); ;
-        //GUILayout.EndArea();
     }
 
     public void OnDrawGizmos()
@@ -385,11 +198,127 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     /* - - - - - NON-STATIC METHODS - - - - - */
 
-    public void PrepareForDelete()
+    public void Initialize(BoxJSON b, Vector3[] _dragLines)
     {
-        if (collided)
-        {
 
+        this_box = b;
+
+        globalDragLines = _dragLines;
+        OffsetDraglineByCubeSize();
+        CalculateNormals();
+
+
+        onClickCallBacks = new List<OnClickCallback>();
+        onMyCollisionEnterCallbacks = new List<OnMyCollisionEnterCallback>();
+        onMyCollisionExitCallbacks = new List<OnMyCollisionExitCallback>();
+        onDragStartCallBacks = new List<OnDragStartCallback>();
+        onDragEndCallBacks = new List<OnDragEndCallback>();
+    }
+
+    private void CalculateNextPosition(int c_index, float current_pos, ref int new_index, ref float new_pos)
+    {
+
+        //Calcualte the estimaded mouse position in the 3D space
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Vector3 mousePos3D = ray.GetPoint(distance);
+
+        // Transform to local coordinates
+        mousePos3D = transform.parent.InverseTransformPoint(mousePos3D);
+
+
+        // Speed calculations
+
+        float time_since_start_drag = (Time.time - startDragTime);
+        // if more than 1 seconds passed -> 1 factor
+        // else scaling factor
+        float time_speed_factor = time_since_start_drag > 1 ? 1 : time_since_start_drag;
+
+        float mouse_distance_speed_factor = (mousePos3D - transform.localPosition).magnitude > 10 ? 1 : (mousePos3D - transform.localPosition).magnitude / 10f;
+        // distance_to_move_budget_in_current_frame = drag_speed * time_since_last_frame * time_speed_factor
+        // this will also be multiplied bye the mouse_position_speed_factor for each dragline
+        float distance_to_move = DRAG_SPEED * Time.deltaTime * 2 * time_speed_factor * 3 * mouse_distance_speed_factor;
+
+
+        while (distance_to_move > 0)
+        {
+            float move_budget = distance_to_move;
+            //Debug.Log("1 C_INDEX: "+c_index+ " C_POS: " +current_pos+ " BUDGET: "+ distance_to_move);
+            MoveInDragline(ref c_index, ref current_pos, mousePos3D, ref distance_to_move);
+            //Debug.Log("2 C_INDEX: " + c_index + " C_POS: " + current_pos + " BUDGET: " + distance_to_move);
+
+            if (move_budget == distance_to_move) { break; }
+        }
+        //Debug.Log("3 C_INDEX: " + c_index + " C_POS: " + current_pos + " BUDGET: " + distance_to_move);
+
+
+        new_index = c_index;
+        new_pos = current_pos;
+    }
+
+    private void MoveInDragline(ref int c_index, ref float c_pos, Vector3 towards_p, ref float move_budget)
+    {
+
+        Vector3 currentPos = localDragLines[c_index] + (localDragLines[c_index + 1] - localDragLines[c_index]) * c_pos;
+
+        // Direction of the dragline
+        Vector3 draglineDir = (localDragLines[c_index + 1] - localDragLines[c_index]).normalized;
+        // curent_point to towards_dir
+        Vector3 currentpToTowardspDir = (towards_p - currentPos).normalized;
+        // Angle inbetween both vectors
+        float alpha = Mathf.Acos(Vector3.Dot(draglineDir, currentpToTowardspDir) / (draglineDir.magnitude * currentpToTowardspDir.magnitude));
+
+
+
+
+        // This representa how well the position of the cursor fits the direction of the current line
+        float towards_position_speed_factor = Mathf.Abs(Mathf.Cos(alpha));
+
+        // This represens if we are moiving towards the start (left) or end (right) of this dragline
+        int right_or_left = (Mathf.Cos(alpha)) >= 0 ? 1 : -1;
+
+
+
+        Vector3 dir_vector = right_or_left == 1 ? draglineDir : -draglineDir;
+
+        // If we are going to the right the distance left will be measured agains the end (c_index +1) of this dragline
+        // If we are going to the left the distance left will be measured against the start (c_index) of this dragline
+        float dist_left_in_current_dragline = right_or_left == 1 ? (localDragLines[c_index + 1] - currentPos).magnitude : (localDragLines[c_index] - currentPos).magnitude;
+
+
+        //Debug.Log("Actual move :" + move_budget * towards_position_speed_factor / (localDragLines[c_index + 1] - localDragLines[c_index]).magnitude + " RoL: " + right_or_left +" Speed fact: " + towards_position_speed_factor + " Dist left: " + dist_left_in_current_dragline + " Dist/fact: " + dist_left_in_current_dragline / towards_position_speed_factor + " budget: " + move_budget);
+
+
+        // If there isn't enough move budget to finish this dragline
+        // if towards_position_speed_factor == 0 it means that the towards point is in 90 (or 270) degrees, so we shouldnt move
+        if (towards_position_speed_factor == 0 || dist_left_in_current_dragline / towards_position_speed_factor > move_budget)
+        {
+            //c_index = c_index;
+            float moved_distance = move_budget * towards_position_speed_factor;
+
+            c_pos = c_pos + right_or_left * (moved_distance / (localDragLines[c_index + 1] - localDragLines[c_index]).magnitude);
+            move_budget = 0;
+        }
+        // If there is
+        else
+        {
+            if (c_index == 0 && right_or_left == -1)
+            {
+                //c_index = c_index;
+                c_pos = 0;
+                move_budget = 0;
+            }
+            else if (c_index == localDragLines.Length - 2 && right_or_left == 1)
+            {
+                //c_index == c_index
+                c_pos = 1;
+                move_budget = 0;
+            }
+            else
+            {
+                c_index = c_index + right_or_left;
+                c_pos = right_or_left == -1 ? 1 : 0;
+                move_budget = move_budget - (dist_left_in_current_dragline / towards_position_speed_factor);
+            }
         }
     }
 
@@ -397,27 +326,6 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     {
 
         
-    }
-
-    public void Initialize(BoxJSON b, Vector3[] _dragLines)
-    {
-
-        this_box = b;
-        transform.localScale = new Vector3(b.width, b.height, b.depth);
-
-        globalDragLines = _dragLines;
-        OffsetDraglineByCubeSize();
-        CalculateNormals();
-
-        transform.localPosition = localDragLines[this_box.current_index] + (localDragLines[this_box.current_index + 1] - localDragLines[this_box.current_index]) * this_box.current_pos_relative;
-
-    }
-
-    public void SetDragline(Vector3[] _dragLines)
-    {
-        globalDragLines = _dragLines;
-        OffsetDraglineByCubeSize();
-        CalculateNormals();
     }
 
     private void OffsetDraglineByCubeSize()
@@ -428,23 +336,21 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
          * and tweak it slightly to fit the size of this gameobject
         */
 
-        Vector3 scale = transform.localScale/2;
-
-        localDragLines = CalculateDragLines(globalDragLines, scale.z, out global_to_public_relation, true);
+        localDragLines = CalculateDragLines(globalDragLines, this_box.actual_depth/2, out global_to_public_relation, true);
 
         for(int i = 0; i < localDragLines.Length; i++)
         {
-            localDragLines[i].y += scale.y;
+            localDragLines[i].y += this_box.actual_height/2;
         }
 
         // Shorten start and end points //
         Vector3 temp = localDragLines[1] - localDragLines[0];
         temp.Normalize();
-        localDragLines[0] = localDragLines[0] + temp * (scale.x);
+        localDragLines[0] = localDragLines[0] + temp * (this_box.actual_width);
 
         temp = localDragLines[localDragLines.Length - 2] - localDragLines[localDragLines.Length - 1];
         temp.Normalize();
-        localDragLines[localDragLines.Length - 1] = localDragLines[localDragLines.Length - 1] + temp * (scale.x);
+        localDragLines[localDragLines.Length - 1] = localDragLines[localDragLines.Length - 1] + temp * (this_box.actual_width);
 
     }
 
@@ -461,6 +367,62 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     }
 
 
+    /* - - - - - CALLLBACK REGISTER - - - - - */
+
+    public delegate void OnClickCallback(int stand, int shelf, int product);
+    public delegate void OnMyCollisionEnterCallback(bool collided_upon);
+    public delegate void OnMyCollisionExitCallback();
+    public delegate void OnDragStartCallback();
+    public delegate void OnDragEndCallback();
+
+    private List<OnClickCallback> onClickCallBacks;
+    private List<OnMyCollisionEnterCallback> onMyCollisionEnterCallbacks;
+    private List<OnMyCollisionExitCallback> onMyCollisionExitCallbacks;
+    private List<OnDragStartCallback> onDragStartCallBacks;
+    private List<OnDragEndCallback> onDragEndCallBacks;
+
+    public void RegisterOnClickCallback(OnClickCallback f)
+    {
+        onClickCallBacks.Add(f);
+    }
+    public void RegisterOnMyCollisionEnterCallback(OnMyCollisionEnterCallback f)
+    {
+        onMyCollisionEnterCallbacks.Add(f);
+    }
+    public void RegisterOnMyCollisionExitCallback(OnMyCollisionExitCallback f)
+    {
+        onMyCollisionExitCallbacks.Add(f);
+    }
+    public void RegisterOnDragStartCallback(OnDragStartCallback f)
+    {
+        onDragStartCallBacks.Add(f);
+    }
+    public void RegisterOnDragEndCallback(OnDragEndCallback f)
+    {
+        onDragEndCallBacks.Add(f);
+    }
+
+    public void ExecOnClickCallbacks(int stand, int shelf, int product)
+    {
+        // TODO
+        foreach (OnClickCallback f in onClickCallBacks) { f(stand, shelf, product);}
+    }
+    public void ExecOnMyCollisionEnterCallbacks()
+    {
+        foreach (OnMyCollisionEnterCallback f in onMyCollisionEnterCallbacks) { f(collided_upon); }
+    }
+    public void ExecOnMyCollisionExitCallbacks()
+    {
+        foreach (OnMyCollisionExitCallback f in onMyCollisionExitCallbacks) { f(); }
+    }
+    public void ExecOnDragStartCallbaks()
+    {
+        foreach (OnDragStartCallback f in onDragStartCallBacks) { f(); }
+    }
+    public void ExecOnDragEndCallbaks()
+    {
+        foreach (OnDragEndCallback f in onDragEndCallBacks) { f(); }
+    }
 
     private Vector3 getClosestPointInCurrentLine(Vector3 point, int c_index, out int n_index)
     {
@@ -689,8 +651,6 @@ class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
             return newDragline.ToArray();
         }
     }
-
-
 
     /* - - - - - STATIC METHODS - - - - - */
 }

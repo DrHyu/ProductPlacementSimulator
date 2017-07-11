@@ -64,13 +64,11 @@ public class ShelfGenerator : MonoBehaviour
                 s.front_index[p] = p;
             }
         }
-        Vector3[] dragline = new Vector3[s.front_index.Length];
 
+        Vector3[] dragline = new Vector3[s.front_index.Length];
         for (int a = 0; a < dragline.Length; a++)
         {
-            dragline[a] = new Vector3(s.x_points[s.front_index[a]],
-                                        0,
-                                        s.y_points[s.front_index[a]]);
+            dragline[a] = new Vector3(s.x_points[s.front_index[a]], 0, s.y_points[s.front_index[a]]);
         }
 
         int[] vertexR;
@@ -84,34 +82,117 @@ public class ShelfGenerator : MonoBehaviour
         {
             for (int p = 0; p < this_shelf.boxes.Length; p++)
             {
-                GenerateProduct(this_shelf.boxes[p]);
+                GameObject new_cube = GenerateProduct(this_shelf.boxes[p], offsettedDragline);
+                new_cube.transform.SetParent(this.transform);
+                AttatchProduct(this_shelf.boxes[p], new_cube);
             }
         }
 
     }
 
-    public void GenerateProduct(BoxJSON box)
+    public void AttatchProduct(BoxJSON b, GameObject cube)
     {
-        Material transparent_m = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
-
-        // TODO: Need to actually edit the boxes array
-        GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        go.name = box.name;
-        cubes.Add(go);
-        productList.Add(box);
-        go.transform.SetParent(transform);
-        go.GetComponent<MeshRenderer>().material = transparent_m;
-
-        Drag3D d3d = go.AddComponent(typeof(Drag3D)) as Drag3D;
-        // TODO Child ID needs to be revised
-        d3d.Initialize(box, offsettedDragline);
-
-        // Make it so there is always at least a very small gap in betwwen cubes
-        go.GetComponent<BoxCollider>().size *= 1.05f;
-
-        id2cube.Add(go.GetInstanceID(), go);
+        cube.transform.SetParent(this.transform);
+        cubes.Add(cube);
+        productList.Add(b);
+        id2cube.Add(cube.GetInstanceID(), cube);
         InvalideChildCollisionMaps();
     }
+
+    public GameObject GenerateProduct( BoxJSON box)
+    {
+        return GenerateProduct(box, offsettedDragline);
+    }
+
+    public static GameObject GenerateProduct(BoxJSON box, Vector3[] shelf_draglines)
+    {
+        GameObject gocube;
+        if (box.x_repeats == 1 && box.y_repeats == 1 && box.z_repeats == 1)
+        {
+            gocube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            gocube.transform.localScale = new Vector3(box.width, box.height, box.depth);
+
+            Drag3D d3d = gocube.AddComponent(typeof(Drag3D)) as Drag3D;
+            d3d.Initialize(box, shelf_draglines);
+
+            // Make it so there is always at least a very small gap in betwwen cubes
+            gocube.GetComponent<BoxCollider>().size *= 1.05f;
+
+            ProductAesthetics pa = gocube.AddComponent<ProductAesthetics>();
+            pa.Initialize(box, d3d);
+            gocube.name = box.name;
+        }
+        else
+        {
+            gocube = new GameObject();
+            List<GameObject> gos = new List<GameObject>();
+
+
+
+            //Vector3 final_size = new Vector3(box.width * box.x_repeats + ProductAesthetics.BOX_STACK_X_SPACING * box.x_repeats,
+            //                                box.height * box.y_repeats + ProductAesthetics.BOX_STACK_Y_SPACING * box.y_repeats, 
+            //                                box.depth * box.z_repeats + ProductAesthetics.BOX_STACK_Z_SPACING * box.z_repeats);
+
+            Vector3 final_size = new Vector3(box.actual_width, box.actual_height, box.actual_depth);
+            Vector3 original_size = new Vector3(box.width, box.height, box.depth);
+
+            //box.actual_width = final_size.x;
+            //box.actual_height = final_size.y;
+            //box.actual_depth = final_size.z;
+
+            for (int x = 0; x < box.x_repeats; x++)
+            {
+                for (int y = 0; y < box.y_repeats; y++)
+                {
+                    for (int z = 0; z < box.z_repeats; z++)
+                    {
+                        GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        go.transform.localPosition = new Vector3(box.width * x + ProductAesthetics.BOX_STACK_X_SPACING * x,
+                                                                    box.height*y + ProductAesthetics.BOX_STACK_Y_SPACING * y, 
+                                                                    box.depth*z + ProductAesthetics.BOX_STACK_Y_SPACING * z) - final_size/2 + original_size/2;
+                        go.transform.localScale = original_size;
+                        go.transform.SetParent(gocube.transform);
+                        go.GetComponent<BoxCollider>().enabled = false;
+                        gos.Add(go);
+                    }
+                }
+            }
+
+
+            Drag3D d3d = gocube.AddComponent(typeof(Drag3D)) as Drag3D;
+            d3d.Initialize(box, shelf_draglines);
+
+            // Make it so there is always at least a very small gap in betwwen cubes
+            //gocube.GetComponent<BoxCollider>().size *= 1.05f;
+
+            foreach( GameObject go in gos)
+            {
+                ProductAesthetics pa =  go.AddComponent<ProductAesthetics>();
+                pa.Initialize(box, d3d);
+            }
+            gocube.AddComponent<BoxCollider>();
+            Bounds b = new Bounds();
+
+            foreach(GameObject go in gos)
+            {
+                b.Encapsulate(go.GetComponent<BoxCollider>().bounds);
+            }
+            //FitToChildren(gocube);
+
+            //gocube.GetComponent<BoxCollider>().center = final_size / 2 - new Vector3(box.width, box.height, box.depth)/2;
+            gocube.GetComponent<BoxCollider>().center = Vector3.zero;
+            gocube.GetComponent<BoxCollider>().size = final_size;
+            gocube.transform.localScale = Vector3.one;
+            gocube.name = box.name;
+
+            ProductAesthetics pae =  gocube.AddComponent<ProductAesthetics>();
+            pae.InitializeAsGroupController(box);
+
+        }
+        return gocube;
+    }
+
+ 
 
     public void UpdateColor()
     {
@@ -177,7 +258,7 @@ public class ShelfGenerator : MonoBehaviour
         foreach (int id in IDs)
         {
             id2cube[id].GetComponent<Drag3D>().collided_upon = true;
-            id2cube[id].GetComponent<Drag3D>().UpdateColor();
+            id2cube[id].GetComponent<Drag3D>().ExecOnMyCollisionEnterCallbacks();
         }
     }
 
@@ -186,12 +267,8 @@ public class ShelfGenerator : MonoBehaviour
         for (int i = 0; i < cubes.Count; i++)
         {
             cubes[i].GetComponent<Drag3D>().collided_upon = false;
-            cubes[i].GetComponent<Drag3D>().UpdateColor();
+            cubes[i].GetComponent<Drag3D>().ExecOnMyCollisionExitCallbacks();
         }
-    }
-
-    private void Update()
-    {
     }
 
     private void OnDrawGizmos()

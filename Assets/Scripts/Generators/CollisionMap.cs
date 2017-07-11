@@ -158,11 +158,11 @@ public class CollisionMap
 
         for (int p = 0; p < boxes.Length; p++)
         {
-            UpdateCollisionMap(mDragLine, boxes[p], cubes[p], t, ref cm, this_cube);
+            UpdateCollisionMap(mDragLine,  cubes[p], t, ref cm);
         }
     }
 
-    public static void UpdateCollisionMap(Vector3[] mDragLine, BoxJSON box, GameObject cube, Transform t, ref CollisionMap cm, BoxJSON this_cube)
+    public static void UpdateCollisionMap(Vector3[] mDragLine, GameObject cube, Transform t, ref CollisionMap cm)
     {
 
         float RESOLUTION = 0.05f;

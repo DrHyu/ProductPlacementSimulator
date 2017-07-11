@@ -26,8 +26,7 @@ public class UItoSimulation : MonoBehaviour
         {
             for (int i = 0; i < product_sel.Length; i++)
             {
-                standList[stand_sel].shelves[shelf_sel].cubes[i].GetComponent<Drag3D>().selected = false;
-                standList[stand_sel].shelves[shelf_sel].cubes[i].GetComponent<Drag3D>().UpdateColor();
+                standList[stand_sel].shelves[shelf_sel].cubes[i].GetComponent<ProductAesthetics>().SetSelected(false);
             }
         }
 
@@ -61,8 +60,7 @@ public class UItoSimulation : MonoBehaviour
         {
             for (int i = 0; i < product_index.Length; i++)
             {
-                standList[stand_index].shelves[shelf_index].cubes[i].GetComponent<Drag3D>().selected = product_index[i];
-                standList[stand_index].shelves[shelf_index].cubes[i].GetComponent<Drag3D>().UpdateColor();
+                standList[stand_index].shelves[shelf_index].cubes[i].GetComponent<ProductAesthetics>().SetSelected(product_index[i]);
             }
         }
 
@@ -124,22 +122,17 @@ public class UItoSimulation : MonoBehaviour
         }
     }
 
-    public void AddProduct(int stand_i, int shelf_i, int db_ref)
+    public void AddProduct(int stand_i, int shelf_i, BoxJSON b)
     {
 
-        DBItem ref_item = null;
-        for(int i =0; i < myDB.contents.Length; i++)
-        {
-            if(myDB.contents[i].ID == db_ref)
-            {
-                ref_item = myDB.contents[i];
-            }
-        }
+        b.actual_width = b.width * b.x_repeats + ProductAesthetics.BOX_STACK_X_SPACING * b.x_repeats;
+        b.actual_height = b.height * b.y_repeats + ProductAesthetics.BOX_STACK_Y_SPACING * b.y_repeats;
+        b.actual_depth = b.depth * b.z_repeats + ProductAesthetics.BOX_STACK_Z_SPACING * b.z_repeats;
 
-        if (ref_item != null)
+        if (b != null)
         {
-            BoxJSON box = new BoxJSON(ref_item);
-            standList[stand_i].shelves[shelf_i].GenerateProduct(box);
+            GameObject go = standList[stand_i].shelves[shelf_i].GenerateProduct(b);
+            standList[stand_i].shelves[shelf_i].AttatchProduct(b,go);
         }
         else
         {
