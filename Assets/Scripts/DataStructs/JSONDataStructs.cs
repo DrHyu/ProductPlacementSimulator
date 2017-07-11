@@ -65,6 +65,10 @@ public class BoxJSON : DBItem
         this.img_path = ref_item.img_path;
     }
 
+    public int x_repeats;
+    public int y_repeats;
+    public int z_repeats;
+
     public int current_index;
     public float current_pos_relative;
 }

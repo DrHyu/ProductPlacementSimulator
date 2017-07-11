@@ -34,6 +34,10 @@ public class UIController : MonoBehaviour {
     private List<string> dbNames;
     private int dbIndex = 0;
 
+    private int stack_x = 1;
+    private int stack_y = 1;
+    private int stack_z = 1;
+
     private bool callbacksSet = false;
     private bool initialized = false;
 
@@ -81,7 +85,7 @@ public class UIController : MonoBehaviour {
 
         InitializeDBStuff(DBH.ReadFullDB());
         DBListerView.RegisterIndexChangedCallback(OnDBListerIndexChanged);
-
+        OnDBListerIndexChanged(dbIndex);
     }
 
     private void Update()
@@ -168,7 +172,10 @@ public class UIController : MonoBehaviour {
     public void OnDBListerIndexChanged(int index)
     {
         dbIndex = index;
-        previewController.PreviewBox(new BoxJSON(myDB.contents[index]));
+        stack_x = 1;
+        stack_y = 1;
+        stack_z = 1;
+        UpdatePreview();
     }
 
     public void OnSearchFieldChanged(string search)
@@ -225,6 +232,47 @@ public class UIController : MonoBehaviour {
         SaveToJSON();
         Application.Quit();
     }
+
+    private void UpdatePreview()
+    {
+        BoxJSON b = new BoxJSON(myDB.contents[dbIndex]);
+        b.x_repeats = stack_x;
+        b.y_repeats = stack_y;
+        b.z_repeats = stack_z;
+        previewController.PreviewBox(b);
+    }
+
+    public void OnXPlusClicked()
+    {
+        stack_x++;
+        UpdatePreview();
+    }
+    public void OnXMinusClicked()
+    {
+        stack_x--;
+        UpdatePreview();
+    }
+    public void OnYPlusClicked()
+    {
+        stack_y++;
+        UpdatePreview();
+    }
+    public void OnYMinusClicked()
+    {
+        stack_y--;
+        UpdatePreview();
+    }
+    public void OnZPlusClicked()
+    {
+        stack_z++;
+        UpdatePreview();
+    }
+    public void OnZMinusClicked()
+    {
+        stack_z--;
+        UpdatePreview();
+    }
+
 
     // -----------------------------------------------------------------------------//
 
