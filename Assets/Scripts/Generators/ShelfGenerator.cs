@@ -7,28 +7,27 @@ using System;
 public class ShelfGenerator : MonoBehaviour
 {
 
-    public bool one = true;
-    public bool two = true;
-
     public int n_cubes;
-    public List<GameObject> cubes;
-    public List<BoxJSON> productList;
+    public List<Drag3D> cubes;
+    public List<BoxJSON> cubesJSON;
     Dictionary<int, GameObject> id2cube;
 
     public ShelfJSON this_shelf;
-
     private GameObject shelf_mesh;
+
+    public bool initialized = false;
     public Boolean selected = false;
 
     private Vector3[] offsettedDragline;
 
-    public CollisionMap tempCollisionMap;    
+    public CollisionMap tempCollisionMap;    // Debugging
 
     public void Initialize(ShelfJSON s)
     {
+        onItemAttachedCallBacks = new List<OnItemAttachedCallback>();
+        onItemDeattachedCallBacks = new List<OnItemDeattachedCallback>();
 
         name = s.name;
-
         this_shelf = s;
 
         transform.localPosition = new Vector3(0,s.absolute_height,0);
@@ -74,8 +73,8 @@ public class ShelfGenerator : MonoBehaviour
         int[] vertexR;
         offsettedDragline = Drag3D.CalculateDragLines(dragline, 0.2f, out vertexR, false);
 
-        cubes       = new List<GameObject>();
-        productList = new List<BoxJSON>();
+        cubes       = new List<Drag3D>();
+        cubesJSON = new List<BoxJSON>();
         id2cube     = new Dictionary<int, GameObject>();
 
         if (this_shelf.boxes != null)
@@ -88,18 +87,12 @@ public class ShelfGenerator : MonoBehaviour
             }
         }
 
+        initialized = true;
     }
 
-    public void AttatchProduct(BoxJSON b, GameObject cube)
-    {
-        cube.transform.SetParent(this.transform);
-        cubes.Add(cube);
-        productList.Add(b);
-        id2cube.Add(cube.GetInstanceID(), cube);
-        InvalideChildCollisionMaps();
-    }
+    // Generation of products //
 
-    public GameObject GenerateProduct( BoxJSON box)
+    public GameObject GenerateProduct(BoxJSON box)
     {
         return GenerateProduct(box, offsettedDragline);
     }
@@ -113,12 +106,13 @@ public class ShelfGenerator : MonoBehaviour
             gocube.transform.localScale = new Vector3(box.width, box.height, box.depth);
 
             Drag3D d3d = gocube.AddComponent(typeof(Drag3D)) as Drag3D;
+            ProductAesthetics pa = gocube.AddComponent<ProductAesthetics>();
+
             d3d.Initialize(box, shelf_draglines);
 
             // Make it so there is always at least a very small gap in betwwen cubes
             gocube.GetComponent<BoxCollider>().size *= 1.05f;
 
-            ProductAesthetics pa = gocube.AddComponent<ProductAesthetics>();
             pa.Initialize(box, d3d);
             gocube.name = box.name;
         }
@@ -148,8 +142,8 @@ public class ShelfGenerator : MonoBehaviour
                     {
                         GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
                         go.transform.localPosition = new Vector3(box.width * x + ProductAesthetics.BOX_STACK_X_SPACING * x,
-                                                                    box.height*y + ProductAesthetics.BOX_STACK_Y_SPACING * y, 
-                                                                    box.depth*z + ProductAesthetics.BOX_STACK_Y_SPACING * z) - final_size/2 + original_size/2;
+                                                                    box.height * y + ProductAesthetics.BOX_STACK_Y_SPACING * y,
+                                                                    box.depth * z + ProductAesthetics.BOX_STACK_Y_SPACING * z) - final_size / 2 + original_size / 2;
                         go.transform.localScale = original_size;
                         go.transform.SetParent(gocube.transform);
                         go.GetComponent<BoxCollider>().enabled = false;
@@ -160,24 +154,30 @@ public class ShelfGenerator : MonoBehaviour
 
 
             Drag3D d3d = gocube.AddComponent(typeof(Drag3D)) as Drag3D;
+            ProductAesthetics pae = gocube.AddComponent<ProductAesthetics>();
+
             d3d.Initialize(box, shelf_draglines);
 
             // Make it so there is always at least a very small gap in betwwen cubes
             //gocube.GetComponent<BoxCollider>().size *= 1.05f;
 
-            foreach( GameObject go in gos)
+            foreach (GameObject go in gos)
             {
-                ProductAesthetics pa =  go.AddComponent<ProductAesthetics>();
+                ProductAesthetics pa = go.AddComponent<ProductAesthetics>();
                 pa.Initialize(box, d3d);
             }
-            gocube.AddComponent<BoxCollider>();
-            Bounds b = new Bounds();
 
-            foreach(GameObject go in gos)
-            {
-                b.Encapsulate(go.GetComponent<BoxCollider>().bounds);
-            }
-            //FitToChildren(gocube);
+            pae.InitializeAsGroupController(box, d3d);
+
+            gocube.AddComponent<BoxCollider>();
+            
+            //Bounds b = new Bounds();
+
+            //foreach (GameObject go in gos)
+            //{
+            //    b.Encapsulate(go.GetComponent<BoxCollider>().bounds);
+            //}
+            ////FitToChildren(gocube);
 
             //gocube.GetComponent<BoxCollider>().center = final_size / 2 - new Vector3(box.width, box.height, box.depth)/2;
             gocube.GetComponent<BoxCollider>().center = Vector3.zero;
@@ -185,70 +185,28 @@ public class ShelfGenerator : MonoBehaviour
             gocube.transform.localScale = Vector3.one;
             gocube.name = box.name;
 
-            ProductAesthetics pae =  gocube.AddComponent<ProductAesthetics>();
-            pae.InitializeAsGroupController(box);
 
         }
         return gocube;
     }
 
- 
+    // Collision maps related methods //
 
-    public void UpdateColor()
+    public void InvalidateChildCollisionMaps()
     {
-        float alpha = shelf_mesh.GetComponent<Renderer>().material.color.a;
-        if (selected)
+        foreach (Drag3D go in cubes)
         {
-            shelf_mesh.GetComponent<MeshRenderer>().material = Resources.Load("Materials/StandardNonTransparent", typeof(Material)) as Material;
-            shelf_mesh.GetComponent<MeshRenderer>().material.color = new Color(0.4f, 1f, 0.8f, alpha);
-        }
-        else
-        {
-            shelf_mesh.GetComponent<MeshRenderer>().material = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
-            shelf_mesh.GetComponent<MeshRenderer>().material.color = new Color(1f, 1f, 1f, alpha);
-        }
-    }
-
-    // Methods used by childs to check/clear collisions with other childs //
-    //public bool CubeIsColided(Bounds cubeMovedBounds, int insanceID)
-    //{
-    //    bool colision_happened = false;
-    //    for (int i = 0; i < cubes.Count; i++)
-    //    {
-    //        if (cubes[i].GetInstanceID() == insanceID) { continue; }
-
-    //        if (cubes[i].GetComponent<BoxCollider>().bounds.Intersects(cubeMovedBounds))
-    //        {
-    //            // Update the other cube's color to show collision aswell.
-    //            cubes[i].GetComponent<Drag3D>().collided_upon = true;
-    //            cubes[i].GetComponent<Drag3D>().updateColor();
-    //            colision_happened = true;
-    //        }
-    //        else
-    //        {
-    //            cubes[i].GetComponent<Drag3D>().collided_upon = false;
-    //            cubes[i].GetComponent<Drag3D>().updateColor();
-    //        }
-
-    //    }
-    //    return colision_happened;
-    //}
-
-    public void InvalideChildCollisionMaps()
-    {
-        foreach( GameObject go in cubes)
-        {
-            go.GetComponent<Drag3D>().cm = null;
+            go.cm = null;
         }
     }
 
     public void InvalideChildCollisionMaps(int exceptID)
     {
-        foreach (GameObject go in cubes)
+        foreach (Drag3D go in cubes)
         {
             if (go.GetInstanceID() != exceptID)
             {
-                go.GetComponent<Drag3D>().cm = null;
+                go.cm = null;
             }
         }
     }
@@ -271,6 +229,86 @@ public class ShelfGenerator : MonoBehaviour
         }
     }
 
+    // Attatching/de-attatching products to this shelf //
+
+    public void AttatchProduct(BoxJSON b, GameObject cube)
+    {
+        cube.transform.SetParent(this.transform);
+        cubes.Add(cube.GetComponent<Drag3D>());
+        cubesJSON.Add(b);
+        id2cube.Add(cube.GetInstanceID(), cube);
+        InvalidateChildCollisionMaps();
+
+
+        // Only need to update the UI for the products added after Start() has been executed 
+        if(initialized == true)
+        {
+            ExecOnItemAttachedCallbacks(transform.parent.GetComponent<StandGenerator>(), this, cube.GetComponent<Drag3D>());
+        }
+    }
+
+
+    public void DeattachProduct(Drag3D leaving_product, bool trigger_callback = false)
+    {
+        InvalidateChildCollisionMaps();
+        cubes.Remove(leaving_product);
+        cubesJSON.Remove(leaving_product.this_box);
+        id2cube.Remove(leaving_product.gameObject.GetInstanceID());
+
+        if (trigger_callback)
+            ExecOnItemDeattachedCallbacks(transform.parent.GetComponent<StandGenerator>(), this, leaving_product);
+    }
+
+    // Callbacks //
+
+    public delegate void OnItemDeattachedCallback(StandGenerator stand, ShelfGenerator shelf, Drag3D cube);
+    private List<OnItemDeattachedCallback> onItemDeattachedCallBacks;
+    public void RegisterOnItemDeattachedCallback(OnItemDeattachedCallback f)
+    {
+        onItemDeattachedCallBacks.Add(f);
+    }
+    public void UnRegisterOnItemDeattachedCallback(OnItemDeattachedCallback f)
+    {
+        onItemDeattachedCallBacks.Remove(f);
+    }
+    public void ExecOnItemDeattachedCallbacks(StandGenerator stand, ShelfGenerator shelf, Drag3D cube)
+    {
+        foreach (OnItemDeattachedCallback f in onItemDeattachedCallBacks) { f(stand, shelf, cube); }
+    }
+
+    public delegate void OnItemAttachedCallback(StandGenerator stand, ShelfGenerator shelf, Drag3D cube);
+    private List<OnItemAttachedCallback> onItemAttachedCallBacks;
+    public void RegisterOnItemAttachedCallback(OnItemAttachedCallback f)
+    {
+        onItemAttachedCallBacks.Add(f);
+    }
+    public void UnRegisterOnItemAttachedCallback(OnItemAttachedCallback f)
+    {
+        onItemAttachedCallBacks.Remove(f);
+    }
+    public void ExecOnItemAttachedCallbacks(StandGenerator stand, ShelfGenerator shelf, Drag3D cube)
+    {
+        foreach (OnItemAttachedCallback f in onItemAttachedCallBacks) { f(stand, shelf, cube); }
+    }
+
+
+    // Others/Misc //
+
+    public void UpdateColor()
+    {
+        float alpha = shelf_mesh.GetComponent<Renderer>().material.color.a;
+        if (selected)
+        {
+            shelf_mesh.GetComponent<MeshRenderer>().material = Resources.Load("Materials/StandardNonTransparent", typeof(Material)) as Material;
+            shelf_mesh.GetComponent<MeshRenderer>().material.color = new Color(0.4f, 1f, 0.8f, alpha);
+        }
+        else
+        {
+            shelf_mesh.GetComponent<MeshRenderer>().material = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
+            shelf_mesh.GetComponent<MeshRenderer>().material.color = new Color(1f, 1f, 1f, alpha);
+        }
+    }
+
     private void OnDrawGizmos()
     {
 
@@ -279,7 +317,7 @@ public class ShelfGenerator : MonoBehaviour
         Gizmos.color = Color.red;
 
         if (tempCollisionMap != null)
-        {                
+        {
             for (int i = 0; i < tempCollisionMap.perNodeCollision.Length - 1; i++)
             {
                 for (int p = 0; p < tempCollisionMap.perNodeCollision[i].Count; p++)
@@ -287,7 +325,7 @@ public class ShelfGenerator : MonoBehaviour
 
                     CollisionBucket cb = tempCollisionMap.perNodeCollision[i][p];
 
-                    if(cb == null || cb.left == null || cb.right == null) { continue;}
+                    if (cb == null || cb.left == null || cb.right == null) { continue; }
 
                     Vector3 sStart = tempCollisionMap.mDraglines[i];
                     Vector3 sDir = (tempCollisionMap.mDraglines[i + 1] - sStart);
@@ -311,9 +349,10 @@ public class ShelfGenerator : MonoBehaviour
                     }
                 }
             }
-            
+
         }
     }
+
 
 
 }

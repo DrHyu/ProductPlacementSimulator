@@ -11,11 +11,15 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     public BoxJSON this_box;
 
+    public ProductAesthetics PA; 
+    public FloatingProducts floatingObj;
+
     // Used to keep state machine
     public bool selected = false;
     public bool dragging = false;
     public bool collided = false;
     public bool collided_upon = false;
+    public bool deattached = false;
 
     // Used to keep history of the last valid position and index to recover in case of a failed drag
     private Vector3 last_position;
@@ -45,9 +49,8 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     private void Update()
     {
-        if(dragging)
+        if(dragging && ! deattached)
         {
-
             //int next_index;
             //// Try the new position
             //transform.localPosition = getClosestPointInCurrentLine(mousePos3D, this_box.current_index, out next_index);
@@ -69,7 +72,7 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
             //if (cm == null)
             //{
                 ShelfGenerator sg = GetComponentInParent<ShelfGenerator>();
-                CollisionMap.CalculateCollisionMap(localDragLines, sg.productList.ToArray(), sg.cubes.ToArray(), transform.parent, out cm, this_box);
+                CollisionMap.CalculateCollisionMap(localDragLines, sg.cubesJSON.ToArray(), sg.cubes.ToArray(), transform.parent, out cm, this_box);
             //}
             //// Further calls will merely update the map with the movement of this cube whithout recalculating the impact of the other boxes in the shelf
             //else
@@ -111,12 +114,36 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
             
         }
 
+        // Start D-attachment
+        if(selected && Input.GetKeyDown(KeyCode.D) && !deattached)
+        {
+            SetDeattached(true);
+        }
+        // Cancel deattatchment
+        else if (deattached && !selected || deattached && Input.GetKeyDown(KeyCode.D))
+        {
+            SetDeattached(false);
+        }
+        // Move while deattached
+        else if (deattached && dragging && selected)
+        {
+            // When deattatched move wherever the mouse is 
+            transform.localPosition = CalculateMousePosition();
+        }
+
+
     }
 
     private void Start()
     {
+
+
         transform.localPosition = localDragLines[this_box.current_index] + (localDragLines[this_box.current_index + 1] - localDragLines[this_box.current_index]) * this_box.current_pos_relative;
         last_position = transform.localPosition;
+
+        floatingObj = GameObject.Find("FloatingProducts").GetComponent<FloatingProducts>();
+        if (floatingObj == null)
+            Debug.LogError("Couldnt't find floating products object !");
     }
 
     private void LateUpdate()
@@ -141,9 +168,7 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         {
             // Notify that we are not longer in collision and cubes that are "collided upon" can reset to default state
             GetComponentInParent<ShelfGenerator>().ClearCollision();
-            transform.localPosition = last_position;
-            this_box.current_index = last_index;
-            this_box.current_pos_relative = last_pos_rel;
+            ReturnToLastValidPosition();
             collided = false;
             ExecOnMyCollisionExitCallbacks();
         }
@@ -157,7 +182,34 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         dragging = true;
         ExecOnDragStartCallbaks();
 
+        if (!selected)
+        {
+            ExecOnClickCallbacks(transform.parent.parent.GetComponent<StandGenerator>(), transform.parent.gameObject.GetComponent<ShelfGenerator>(), this);
+        }
+
         startDragTime = Time.time;
+    }
+
+    public void SetSelected(bool sel)
+    {
+        selected = sel;
+        PA.SetSelected(sel);
+    }
+
+    public void SetDeattached(bool deattached)
+    {
+        if(deattached && !this.deattached)
+        {
+            transform.parent.GetComponent<ShelfGenerator>().DeattachProduct(this, true);
+            floatingObj.AddFloatingProduct(this, transform.parent.GetComponent<ShelfGenerator>(), transform.parent.parent.GetComponent<StandGenerator>());
+            this.deattached = true;
+        }
+        else if(!deattached && this.deattached)
+        {
+            floatingObj.ReturnFloatingProduct();
+            //ReturnToLastValidPosition();
+            this.deattached = false;
+        }
     }
 
     public void OnDrawGizmos()
@@ -200,7 +252,6 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     public void Initialize(BoxJSON b, Vector3[] _dragLines)
     {
-
         this_box = b;
 
         globalDragLines = _dragLines;
@@ -213,18 +264,35 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         onMyCollisionExitCallbacks = new List<OnMyCollisionExitCallback>();
         onDragStartCallBacks = new List<OnDragStartCallback>();
         onDragEndCallBacks = new List<OnDragEndCallback>();
+
+        PA = gameObject.GetComponent<ProductAesthetics>();
+
+        if (PA == null)
+            Debug.LogError("Product Aesthetics not present");
+    }
+
+
+    private Vector3 CalculateMousePosition()
+    {
+        //Calculate the estimaded mouse position in the 3D space
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Vector3 mousePos3D = ray.GetPoint(distance);
+
+        // Transform to local coordinates
+        return transform.parent.InverseTransformPoint(mousePos3D);
     }
 
     private void CalculateNextPosition(int c_index, float current_pos, ref int new_index, ref float new_pos)
     {
 
         //Calcualte the estimaded mouse position in the 3D space
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        Vector3 mousePos3D = ray.GetPoint(distance);
+        //Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        //Vector3 mousePos3D = ray.GetPoint(distance);
 
-        // Transform to local coordinates
-        mousePos3D = transform.parent.InverseTransformPoint(mousePos3D);
+        //// Transform to local coordinates
+        //mousePos3D = transform.parent.InverseTransformPoint(mousePos3D);
 
+        Vector3 mousePos3D = CalculateMousePosition();
 
         // Speed calculations
 
@@ -322,6 +390,13 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         }
     }
 
+    public void ReturnToLastValidPosition()
+    {
+        transform.localPosition = last_position;
+        this_box.current_index = last_index;
+        this_box.current_pos_relative = last_pos_rel;
+    }
+
     private void FindNextEmptySpace(GameObject other_cube)
     {
 
@@ -369,7 +444,7 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
     /* - - - - - CALLLBACK REGISTER - - - - - */
 
-    public delegate void OnClickCallback(int stand, int shelf, int product);
+    public delegate void OnClickCallback(StandGenerator stand, ShelfGenerator shelf, Drag3D box);
     public delegate void OnMyCollisionEnterCallback(bool collided_upon);
     public delegate void OnMyCollisionExitCallback();
     public delegate void OnDragStartCallback();
@@ -402,10 +477,18 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         onDragEndCallBacks.Add(f);
     }
 
-    public void ExecOnClickCallbacks(int stand, int shelf, int product)
+    public void UnregisterOnClickCallback(OnClickCallback f)
     {
-        // TODO
-        foreach (OnClickCallback f in onClickCallBacks) { f(stand, shelf, product);}
+        //foreach(OnClickCallback ff in onClickCallBacks)
+        //{
+        //    if(ff == f) { onClickCallBacks.Remove(f); }
+        //}
+        onClickCallBacks.Remove(f);
+    }
+
+    public void ExecOnClickCallbacks(StandGenerator stand, ShelfGenerator shelf, Drag3D box)
+    {
+        foreach (OnClickCallback f in onClickCallBacks) { f(stand, shelf, box);}
     }
     public void ExecOnMyCollisionEnterCallbacks()
     {
@@ -423,6 +506,9 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     {
         foreach (OnDragEndCallback f in onDragEndCallBacks) { f(); }
     }
+
+
+
 
     private Vector3 getClosestPointInCurrentLine(Vector3 point, int c_index, out int n_index)
     {

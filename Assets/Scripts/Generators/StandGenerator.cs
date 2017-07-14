@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System;
+using System.Collections.Generic;
+using System.Collections;
 
 [Serializable]
 public class StandGenerator : MonoBehaviour
@@ -7,35 +9,27 @@ public class StandGenerator : MonoBehaviour
     private Vector2[] wall;
     private GameObject[] wall_obj;
 
-    public ShelfGenerator[] shelves;
+    public List<ShelfGenerator> shelves;
     public StandJSON this_stand;
     public Vector3 move_increment;
 
     public bool selected = false;
-
     private bool initialized = false;
 
-    private Material transparent_m;
-    private Material nonTransparent_m;
-
     public int ViewMode = UItoSimulation.ALPHA_CHANGE;
-
+    Dictionary<int, GameObject> id2shelf;
 
     private void Start()
     {
-        // Load materials just once;
-        transparent_m    = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
-        nonTransparent_m = Resources.Load("Materials/StandardNonTransparent", typeof(Material)) as Material;
-
         UpdateColor();
 
         move_increment = Vector3.zero;
 
-        transform.parent.gameObject.GetComponent<SceneGenerator>().RegisterChild(this);
-
+        // This will only ever get executed if the stand is created manually through the editor
         if (!initialized)
         {
             Initialize();
+            transform.parent.gameObject.GetComponent<SceneGenerator>().RegisterChild(this);
         }
     }
 
@@ -49,6 +43,7 @@ public class StandGenerator : MonoBehaviour
         initialized = true;
         this_stand = s;
 
+
         transform.localPosition = Vector3.zero;
 
         transform.localRotation = Quaternion.identity;
@@ -56,9 +51,10 @@ public class StandGenerator : MonoBehaviour
 
         transform.localPosition += new Vector3(s.x_start, s.y_start, s.z_start);
 
-        shelves = new ShelfGenerator[s.shelves.Length];
+        shelves = new List<ShelfGenerator>();
 
         float current_height = 0;
+        id2shelf = new Dictionary<int, GameObject>();
 
         for (int i = 0; i < s.shelves.Length; i++)
         {
@@ -66,13 +62,15 @@ public class StandGenerator : MonoBehaviour
 
             ShelfGenerator SHG = g.AddComponent(typeof(ShelfGenerator)) as ShelfGenerator;
 
+            id2shelf.Add(g.GetInstanceID(), g);
+
             SHG.transform.SetParent(transform);
 
             current_height += s.shelves[i].relative_height;
             s.shelves[i].absolute_height = current_height;
             SHG.Initialize(s.shelves[i]);
 
-            shelves[i] = SHG;
+            shelves.Add(SHG);
 
         }
         wall = new Vector2[s.wall_x.Length];
@@ -165,7 +163,7 @@ public class StandGenerator : MonoBehaviour
 
         if (shelves != null)
         {
-            for (int i = 0; i < shelves.Length; i++)
+            for (int i = 0; i < shelves.Count; i++)
             {
                 GameObject.Destroy(shelves[i].gameObject);
             }
@@ -214,6 +212,10 @@ public class StandGenerator : MonoBehaviour
 
     public void UpdateColor()
     {
+
+        Material transparent_m = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
+        Material nonTransparent_m = Resources.Load("Materials/StandardNonTransparent", typeof(Material)) as Material;
+
         if (selected)
         {
             // Set the Alpha to high on child objects
@@ -251,4 +253,5 @@ public class StandGenerator : MonoBehaviour
             }
         }
     }
+
 }

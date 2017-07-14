@@ -60,12 +60,12 @@ public class MenuJSONOps : MonoBehaviour
         {
             outData[st] = s[st].this_stand;
 
-            for(int sh = 0; sh < s[st].shelves.Length; sh ++)
+            for(int sh = 0; sh < s[st].shelves.Count; sh ++)
             {
                 // Each shelf has 1 array with the product data that was extracted from the JSON 
                 // it also has 1 array list which is the one used and updated
                 // TODO this is so confusing, it should be reworked
-                outData[st].shelves[sh].boxes = s[st].shelves[sh].productList.ToArray();
+                outData[st].shelves[sh].boxes = s[st].shelves[sh].cubesJSON.ToArray();
             }
 
         }

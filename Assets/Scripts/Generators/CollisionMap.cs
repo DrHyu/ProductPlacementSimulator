@@ -17,7 +17,7 @@ public class CollisionMap
     Dictionary<int, List<int>> collisionNote;
 
 
-    public CollisionMap(Vector3[] dragLines, GameObject[] cubes)
+    public CollisionMap(Vector3[] dragLines, Drag3D[] cubes)
     {
         perNodeCollision = new List<CollisionBucket>[dragLines.Length];
 
@@ -42,7 +42,7 @@ public class CollisionMap
 
         for (int i = 0; i < cubes.Length; i++)
         {
-            collisionNote.Add(cubes[i].GetInstanceID(), new List<int>());
+            collisionNote.Add(cubes[i].gameObject.GetInstanceID(), new List<int>());
         }
 
     }
@@ -134,7 +134,7 @@ public class CollisionMap
         return collisionNote[ID].Count > 0;
     }
 
-    public static void CalculateCollisionMap(Vector3[] mDragLine, BoxJSON[] boxes, GameObject[] cubes, Transform t, out CollisionMap cm, BoxJSON this_cube)
+    public static void CalculateCollisionMap(Vector3[] mDragLine, BoxJSON[] boxes, Drag3D[] cubes, Transform t, out CollisionMap cm, BoxJSON this_cube)
     {
 
 
@@ -162,12 +162,12 @@ public class CollisionMap
         }
     }
 
-    public static void UpdateCollisionMap(Vector3[] mDragLine, GameObject cube, Transform t, ref CollisionMap cm)
+    public static void UpdateCollisionMap(Vector3[] mDragLine, Drag3D cube, Transform t, ref CollisionMap cm)
     {
 
         float RESOLUTION = 0.05f;
 
-        int ID = cube.GetInstanceID();
+        int ID = cube.gameObject.GetInstanceID();
 
         // Clear out any conflict info caused by ID
         //for(int i = 0; i < cm.perNodeCollision.Length; i++)
@@ -185,17 +185,17 @@ public class CollisionMap
 
         for (int i = 0; i < mDragLine.Length - 1; i++)
         {
-            BoxCollider b = cube.GetComponent<BoxCollider>();
+            BoxCollider b = cube.gameObject.GetComponent<BoxCollider>();
 
             Vector3 segmentStart = mDragLine[i];
             Vector3 segmentEnd = mDragLine[i + 1];
 
-            segmentStart = cube.transform.parent.TransformPoint(segmentStart);
-            segmentEnd = cube.transform.parent.TransformPoint(segmentEnd);
+            segmentStart = cube.gameObject.transform.parent.TransformPoint(segmentStart);
+            segmentEnd = cube.gameObject.transform.parent.TransformPoint(segmentEnd);
 
 
-            segmentStart.y = cube.transform.position.y;
-            segmentEnd.y = cube.transform.position.y;
+            segmentStart.y = cube.gameObject.transform.position.y;
+            segmentEnd.y = cube.gameObject.transform.position.y;
 
             Vector3 segmentDir = segmentEnd - segmentStart;
 

@@ -106,6 +106,7 @@
     <Compile Include="Assets\Scripts\Extensions.cs" />
     <Compile Include="Assets\Scripts\Generators\CollisionMap.cs" />
     <Compile Include="Assets\Scripts\Generators\Drag3D.cs" />
+    <Compile Include="Assets\Scripts\Generators\FloatingProducts.cs" />
     <Compile Include="Assets\Scripts\Generators\MeshGenerator.cs" />
     <Compile Include="Assets\Scripts\Generators\MiscFunc.cs" />
     <Compile Include="Assets\Scripts\Generators\ProductAesthetics.cs" />
@@ -118,6 +119,7 @@
     <Compile Include="Assets\Scripts\UIStuff\ButtonClickCallback.cs" />
     <Compile Include="Assets\Scripts\UIStuff\CallBackRegisterableClass.cs" />
     <Compile Include="Assets\Scripts\UIStuff\PreviewController.cs" />
+    <Compile Include="Assets\Scripts\UIStuff\SimulationToUI.cs" />
     <Compile Include="Assets\Scripts\UIStuff\TextClickHandle.cs" />
     <Compile Include="Assets\Scripts\UIStuff\TextScrollView.cs" />
     <Compile Include="Assets\Scripts\UIStuff\UIController.cs" />

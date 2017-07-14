@@ -28,7 +28,7 @@ public class ProductAesthetics : MonoBehaviour
 
 
     // If in group controller mode all it will do is spread the "messages" from the UI to each individual cubes
-    public void InitializeAsGroupController(BoxJSON box)
+    public void InitializeAsGroupController(BoxJSON box, Drag3D D3D)
     {
         this.box = box;
         this.D3D = D3D;
@@ -74,7 +74,7 @@ public class ProductAesthetics : MonoBehaviour
             if (box.img_path != null)
             {
                 // Make sure it is at the very start 
-                GetComponent<Renderer>().material = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
+                GetComponent<Renderer>().material = Resources.Load("Materials/StandardNonTransparent", typeof(Material)) as Material;
                 GetComponent<Renderer>().material.color = originalColor;
 
                 GameObject imageHolder = GameObject.CreatePrimitive(PrimitiveType.Plane);
@@ -102,7 +102,7 @@ public class ProductAesthetics : MonoBehaviour
         }
         else
         {
-            foreach(ProductAesthetics pa in paChilds)
+            foreach (ProductAesthetics pa in paChilds)
             {
                 pa.selected = sel;
                 pa.UpdateColor();

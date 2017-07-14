@@ -15,10 +15,10 @@ public class SceneGenerator : MonoBehaviour
 
     public List<StandGenerator> stands;
 
+    public Dictionary<int, GameObject> id2stand;
     
-    void Start()
+    void Awake ()
     {
-
         if (AUTOSTART)
         {
             GenerateScene(JSONPath);
@@ -38,6 +38,7 @@ public class SceneGenerator : MonoBehaviour
         sceneData = sd;
 
         stands = new List<StandGenerator>();
+        id2stand = new Dictionary<int, GameObject>();
 
         for (int i = 0; i < sceneData.stands.Length; i++)
         {
@@ -45,8 +46,18 @@ public class SceneGenerator : MonoBehaviour
             g.transform.SetParent(transform);
 
             StandGenerator STD = g.AddComponent(typeof(StandGenerator)) as StandGenerator;
+            stands.Add(STD);
+            id2stand.Add(STD.gameObject.GetInstanceID(), STD.gameObject);
+
             STD.Initialize(sceneData.stands[i]);
         }
+
+        //if (AUTOSTART)
+        //{
+        //    GameObject UI = GameObject.Find("UIController");
+        //    UIController uiController = UI.GetComponent<UIController>();
+        //    uiController.SetStandList(stands);
+        //}
     }
 
     private SceneData LoadShelfData(string JSONName)
@@ -66,8 +77,6 @@ public class SceneGenerator : MonoBehaviour
         return sd;
     }
 
-    
-    
     public void RegisterChild(StandGenerator s)
     {
         if(stands == null)
@@ -76,13 +85,14 @@ public class SceneGenerator : MonoBehaviour
         }
 
         stands.Add(s);
+        id2stand.Add(s.gameObject.GetInstanceID(), s.gameObject);
 
-        // TODO probably needs a less crappy style
-        if (AUTOSTART)
-        {
-            GameObject UI = GameObject.Find("UIController");
-            UIController uiController = UI.GetComponent<UIController>();
-            uiController.SetStandList(stands);
-        }
+    //    // TODO probably needs a less crappy style
+    //    if (AUTOSTART)
+    //    {
+    //        GameObject UI = GameObject.Find("UIController");
+    //        UIController uiController = UI.GetComponent<UIController>();
+    //        uiController.SetStandList(stands);
+    //    }
     }
 }
