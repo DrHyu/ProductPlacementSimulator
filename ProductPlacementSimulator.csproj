@@ -99,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\MouseDisplayer.cs" />
+    <Compile Include="Assets\Scripts\OnClickPassUp.cs" />
     <Compile Include="Assets\Scripts\BezierLines.cs" />
     <Compile Include="Assets\Scripts\DBHandler.cs" />
     <Compile Include="Assets\Scripts\DataStructs\JSONDataStructs.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="Assets\Scripts\Vector.cs" />
     <Compile Include="Assets\Scripts\camera2.cs" />
     <Compile Include="Assets\Scripts\maxCamera.cs" />
+    <Compile Include="Assets\testTrigger.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Standard Assets\Characters\FirstPersonCharacter\FirstPersonCharacterGuidelines.txt" />

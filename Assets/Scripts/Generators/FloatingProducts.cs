@@ -5,6 +5,7 @@ public class FloatingProducts : MonoBehaviour
 {
     // Used to provided a temporary space for the products that have been deattached and ar looking for a new shelf
 
+    public SceneGenerator _ScemeGenerator;
     public Drag3D floatingProduct;
 
     public StandGenerator floatingPordOrigStand;
@@ -29,21 +30,38 @@ public class FloatingProducts : MonoBehaviour
         return true;
     }
 
-    public void ReturnFloatingProduct()
+    public void ReAttach(ShelfGenerator sg = null)
     {
-        return_floating_prod = true;
+        ShelfGenerator target_shelf = sg == null ? floatingProdOrigShelf : sg;
+
+        floatingProduct.deattached = false;
+
+        if( target_shelf == floatingProdOrigShelf)
+        {
+            target_shelf.AttachProduct(floatingProduct.this_box, floatingProduct.gameObject);
+        }
+        else
+        {
+            target_shelf.AttachProduct2(floatingProduct.this_box, floatingProduct.gameObject);
+        }
+
+        if (sg != null)
+            floatingProduct.ReturnToLastValidPosition();
+
+        floatingProduct = null;
     }
+
 
     private void LateUpdate()
     {
         if (return_floating_prod)
         {
-            return_floating_prod = false;
-            floatingProduct.deattached = false;
-            floatingProdOrigShelf.AttatchProduct(floatingProduct.this_box, floatingProduct.gameObject);
-            floatingProduct.ReturnToLastValidPosition();
+            //return_floating_prod = false;
+            //floatingProduct.deattached = false;
+            //floatingProdOrigShelf.AttatchProduct(floatingProduct.this_box, floatingProduct.gameObject);
+            //floatingProduct.ReturnToLastValidPosition();
             
-            floatingProduct = null;
+            //floatingProduct = null;
         }
     }
 
@@ -51,4 +69,6 @@ public class FloatingProducts : MonoBehaviour
     {
         return floatingProduct != null;
     }
+
+
 }

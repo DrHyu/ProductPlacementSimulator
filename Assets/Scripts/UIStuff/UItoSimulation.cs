@@ -161,7 +161,7 @@ public class UItoSimulation : MonoBehaviour
         if (b != null)
         {
             GameObject go = standList[stand_i].shelves[shelf_i].GenerateProduct(b);
-            standList[stand_i].shelves[shelf_i].AttatchProduct(b,go);
+            standList[stand_i].shelves[shelf_i].AttachProduct(b,go);
             return go.GetComponent<Drag3D>();
         }
         else

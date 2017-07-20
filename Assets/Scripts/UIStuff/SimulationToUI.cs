@@ -42,6 +42,7 @@ public class SimulationToUI : MonoBehaviour
                     if (shg == null) { continue; }
                     shg.RegisterOnItemAttachedCallback(OnProductAddedToShelf);
                     shg.RegisterOnItemDeattachedCallback(OnProdcutRemovedFromShelf);
+                    shg.RegisterOnShelfClickedCallback(OnShelfClicked);
 
                     foreach (Transform box in sh.transform)
                     {
@@ -98,5 +99,16 @@ public class SimulationToUI : MonoBehaviour
             bool[] sel = UIController.GetSelectedArray( new int[]{len-1}, len);
             _UIController.UpdateUIState(_UIController.stand_dropdown_index, _UIController.shelf_dropdown_index, sel, true, true);
         }
+    }
+
+    public void OnShelfClicked(ShelfGenerator shg, StandGenerator stg)
+    {
+        int standIndex = _UIController.standList.IndexOf(stg);
+        int shelfIndex = _UIController.standList[standIndex].shelves.IndexOf(shg);
+
+        int len = _UIController.standList[standIndex].shelves[shelfIndex].cubes.Count;
+        bool[] sel = UIController.GetSelectedArray(new int[] {}, len);
+
+        _UIController.UpdateUIState(standIndex, shelfIndex, sel, true, false);
     }
 }

@@ -26,6 +26,7 @@ public class ShelfGenerator : MonoBehaviour
     {
         onItemAttachedCallBacks = new List<OnItemAttachedCallback>();
         onItemDeattachedCallBacks = new List<OnItemDeattachedCallback>();
+        onShelfClickedCallBacks = new List<OnShelfClickedCallback>();
 
         name = s.name;
         this_shelf = s;
@@ -40,17 +41,29 @@ public class ShelfGenerator : MonoBehaviour
         MeshGenerator meshGen = new MeshGenerator(s.x_points, s.y_points);
         Mesh msh = meshGen.get3DMeshFrom2D(-s.thickness);
 
+       
+
         // Render the mesh
         shelf_mesh.AddComponent(typeof(MeshRenderer));
         MeshFilter meshRenderer = shelf_mesh.AddComponent(typeof(MeshFilter)) as MeshFilter;
         meshRenderer.mesh = msh;
 
-        shelf_mesh.GetComponent<Renderer>().material = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
-        shelf_mesh.GetComponent<Renderer>().material.color = Color.white;
+        shelf_mesh.GetComponent<MeshRenderer>().material = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
+        shelf_mesh.GetComponent<MeshRenderer>().material.color = Color.white;
         shelf_mesh.GetComponent<Transform>().localScale = new Vector3(1, 1, 1);
         shelf_mesh.GetComponent<Transform>().SetParent(transform);
         shelf_mesh.GetComponent<Transform>().localPosition = new Vector3(0, 0, 0);
         shelf_mesh.GetComponent<Transform>().localRotation = Quaternion.identity;
+
+        // Enables to pass the on click event to this object
+        shelf_mesh.AddComponent<OnClickPassUp>();
+
+        MeshCollider mc = shelf_mesh.AddComponent<MeshCollider>();
+
+        mc.sharedMesh = msh;
+        mc.convex = true;
+        mc.isTrigger = true;
+        
 
         // Calculate the the points that belong to the front face of the shelf
         // If none ar given, they are all front face by default
@@ -83,7 +96,7 @@ public class ShelfGenerator : MonoBehaviour
             {
                 GameObject new_cube = GenerateProduct(this_shelf.boxes[p], offsettedDragline);
                 new_cube.transform.SetParent(this.transform);
-                AttatchProduct(this_shelf.boxes[p], new_cube);
+                AttachProduct(this_shelf.boxes[p], new_cube);
             }
         }
 
@@ -112,9 +125,14 @@ public class ShelfGenerator : MonoBehaviour
 
             // Make it so there is always at least a very small gap in betwwen cubes
             gocube.GetComponent<BoxCollider>().size *= 1.05f;
+            gocube.GetComponent<BoxCollider>().isTrigger = true;
 
             pa.Initialize(box, d3d);
             gocube.name = box.name;
+
+            Rigidbody rb = gocube.AddComponent<Rigidbody>();
+            rb.isKinematic = true;
+            rb.useGravity = false;
         }
         else
         {
@@ -182,10 +200,13 @@ public class ShelfGenerator : MonoBehaviour
             //gocube.GetComponent<BoxCollider>().center = final_size / 2 - new Vector3(box.width, box.height, box.depth)/2;
             gocube.GetComponent<BoxCollider>().center = Vector3.zero;
             gocube.GetComponent<BoxCollider>().size = final_size;
+            gocube.GetComponent<BoxCollider>().isTrigger = true;
             gocube.transform.localScale = Vector3.one;
             gocube.name = box.name;
 
-
+            Rigidbody rb = gocube.AddComponent<Rigidbody>();
+            rb.isKinematic = true;
+            rb.useGravity = false;
         }
         return gocube;
     }
@@ -231,7 +252,7 @@ public class ShelfGenerator : MonoBehaviour
 
     // Attatching/de-attatching products to this shelf //
 
-    public void AttatchProduct(BoxJSON b, GameObject cube)
+    public void AttachProduct(BoxJSON b, GameObject cube)
     {
         cube.transform.SetParent(this.transform);
         cubes.Add(cube.GetComponent<Drag3D>());
@@ -247,6 +268,39 @@ public class ShelfGenerator : MonoBehaviour
         }
     }
 
+    public void AttachProduct2(BoxJSON b, GameObject cube)
+    {
+        AttachProduct(b, cube);
+
+        Vector3 new_pos;
+        int c_index;
+        float c_pos;
+        FindAttachmentPoint(cube.GetComponent<Drag3D>(), out new_pos, out c_index, out c_pos);
+        cube.GetComponent<Drag3D>().SetStartingPosition(new_pos, c_index, c_pos);
+    }
+
+    private void FindAttachmentPoint(Drag3D new_prod, out Vector3 new_pos, out int c_index, out float c_pos)
+    {
+        Vector3 pos = transform.InverseTransformPoint(new_prod.transform.position);
+
+        float min_dist = float.PositiveInfinity;
+        int  min_dist_indx = 0;
+
+        for (int c = 0; c < new_prod.localDragLines.Length-1 ; c ++)
+        {
+            float dist = (pos - new_prod.localDragLines[c]).sqrMagnitude;
+
+            if(dist < min_dist)
+            {
+                min_dist = dist;
+                min_dist_indx = c;
+            }
+        }
+
+        new_pos = new_prod.localDragLines[min_dist_indx];
+        c_pos = 0;
+        c_index = min_dist_indx;
+    }
 
     public void DeattachProduct(Drag3D leaving_product, bool trigger_callback = false)
     {
@@ -258,6 +312,7 @@ public class ShelfGenerator : MonoBehaviour
         if (trigger_callback)
             ExecOnItemDeattachedCallbacks(transform.parent.GetComponent<StandGenerator>(), this, leaving_product);
     }
+
 
     // Callbacks //
 
@@ -291,8 +346,27 @@ public class ShelfGenerator : MonoBehaviour
         foreach (OnItemAttachedCallback f in onItemAttachedCallBacks) { f(stand, shelf, cube); }
     }
 
+    public delegate void OnShelfClickedCallback(ShelfGenerator shg, StandGenerator stg);
+    private List<OnShelfClickedCallback> onShelfClickedCallBacks;
+    public void RegisterOnShelfClickedCallback(OnShelfClickedCallback f)
+    {
+        onShelfClickedCallBacks.Add(f);
+    }
+    public void UnRegisterOnShelfClickedCallback(OnShelfClickedCallback f)
+    {
+        onShelfClickedCallBacks.Remove(f);
+    }
+    public void ExecOnShelfClickedCallbacks()
+    {
+        foreach (OnShelfClickedCallback f in onShelfClickedCallBacks) { f(this, transform.GetComponentInParent<StandGenerator>()); }
+    }
 
     // Others/Misc //
+
+    public void OnMeshMouseDown()
+    {
+        ExecOnShelfClickedCallbacks();
+    }
 
     public void UpdateColor()
     {
@@ -351,6 +425,8 @@ public class ShelfGenerator : MonoBehaviour
             }
 
         }
+
+
     }
 
 

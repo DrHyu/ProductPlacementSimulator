@@ -152,7 +152,7 @@ public class UIController : MonoBehaviour {
         }
 
         // Redraw UI
-        UpdateUIState(stand_dropdown_index, shelf_dropdown_index, productIndexes, false, true);
+        //UpdateUIState(stand_dropdown_index, shelf_dropdown_index, productIndexes, false, true);
     }
 
     public void OnRemoveButonPressed()

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System;
 using UnityEngine.EventSystems;
 
-public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
+public class Drag3D : MonoBehaviour
 {
     public CollisionMap cm;
 
@@ -114,30 +114,28 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
             
         }
 
-        // Start D-attachment
-        if(selected && Input.GetKeyDown(KeyCode.D) && !deattached)
-        {
-            SetDeattached(true);
-        }
-        // Cancel deattatchment
-        else if (deattached && !selected || deattached && Input.GetKeyDown(KeyCode.D))
-        {
-            SetDeattached(false);
-        }
-        // Move while deattached
-        else if (deattached && dragging && selected)
-        {
-            // When deattatched move wherever the mouse is 
-            transform.localPosition = CalculateMousePosition();
-        }
+        //// Start D-attachment
+        //if(selected && Input.GetKeyDown(KeyCode.D) && !deattached)
+        //{
+        //    Deattach();
+        //}
+        //// Cancel deattatchment
+        //else if (deattached && !selected || deattached && Input.GetKeyDown(KeyCode.D))
+        //{
+        //    ReAttach();
+        //}
+        //// Move while deattached
+        //else if (deattached && dragging && selected)
+        //{
+        //    // When deattatched move wherever the mouse is 
+        //    transform.localPosition = CalculateMousePosition();
+        //}
 
 
     }
 
     private void Start()
     {
-
-
         transform.localPosition = localDragLines[this_box.current_index] + (localDragLines[this_box.current_index + 1] - localDragLines[this_box.current_index]) * this_box.current_pos_relative;
         last_position = transform.localPosition;
 
@@ -150,6 +148,23 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
     {
         Vector3 n = normals[this_box.current_index].to3DwY(0);
         transform.localRotation = Quaternion.LookRotation(n);
+
+        // Start D-attachment
+        if (selected && Input.GetKeyDown(KeyCode.D) && !deattached)
+        {
+            Deattach();
+        }
+        // Cancel deattatchment
+        else if (deattached && !selected || deattached && Input.GetKeyDown(KeyCode.D))
+        {
+            ReAttach();
+        }
+        // Move while deattached
+        else if (deattached && dragging && selected)
+        {
+            // When deattatched move wherever the mouse is 
+            transform.localPosition = CalculateMousePosition();
+        }
     }
 
     public void OnValidate()
@@ -162,7 +177,7 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         transform.localPosition = localDragLines[this_box.current_index];
     }
 
-    public void OnPointerUp(PointerEventData eventData) 
+    private void OnMouseUp()
     {
         if (collided)
         {
@@ -176,7 +191,7 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         ExecOnDragEndCallbaks();
     }
 
-    public void OnPointerDown(PointerEventData eventData)
+    private void OnMouseDown()
     {
         distance = Vector3.Distance(GetComponent<Transform>().position, Camera.main.transform.position);
         dragging = true;
@@ -190,25 +205,57 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         startDragTime = Time.time;
     }
 
+    public void OnCollisionEnter(Collision collision)
+    {
+        if (deattached && selected)
+        {
+            ShelfGenerator sg =  collision.collider.gameObject.GetComponent<ShelfGenerator>();
+            if(sg != null || sg != floatingObj.floatingProdOrigShelf)
+            {
+                ReAttach(sg);
+            }
+        }
+    }
+
+    public void OnTriggerEnter(Collider other)
+    {
+        if (deattached && selected)
+        {
+            ShelfGenerator sg = other.gameObject.GetComponentInParent<ShelfGenerator>();
+            if (sg != null && sg != floatingObj.floatingProdOrigShelf)
+            {
+                ReAttach(sg);
+            }
+        }
+    }
+
     public void SetSelected(bool sel)
     {
         selected = sel;
         PA.SetSelected(sel);
     }
 
-    public void SetDeattached(bool deattached)
+    public void Deattach()
     {
-        if(deattached && !this.deattached)
+        if(!deattached)
         {
             transform.parent.GetComponent<ShelfGenerator>().DeattachProduct(this, true);
             floatingObj.AddFloatingProduct(this, transform.parent.GetComponent<ShelfGenerator>(), transform.parent.parent.GetComponent<StandGenerator>());
-            this.deattached = true;
+            deattached = true;
         }
-        else if(!deattached && this.deattached)
+    }
+
+    public void ReAttach(ShelfGenerator sg = null)
+    {
+        FloatingProducts fp = transform.GetComponentInParent<FloatingProducts>();
+        if(fp != null)
         {
-            floatingObj.ReturnFloatingProduct();
-            //ReturnToLastValidPosition();
             this.deattached = false;
+            fp.ReAttach(sg);
+        }
+        else
+        {
+            Debug.LogError("Attempting to re-attach without beeing in floating products");
         }
     }
 
@@ -270,7 +317,6 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
         if (PA == null)
             Debug.LogError("Product Aesthetics not present");
     }
-
 
     private Vector3 CalculateMousePosition()
     {
@@ -388,6 +434,18 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
                 move_budget = move_budget - (dist_left_in_current_dragline / towards_position_speed_factor);
             }
         }
+    }
+
+    public void SetStartingPosition(Vector3 pos, int c_index, float c_pos)
+    {
+        transform.localPosition = pos;
+
+        this_box.current_index = c_index;
+        this_box.current_pos_relative = c_pos;
+
+        last_position = pos;
+        last_index = c_index;
+        last_pos_rel = c_pos;
     }
 
     public void ReturnToLastValidPosition()
@@ -510,9 +568,9 @@ public class Drag3D : MonoBehaviour, IPointerUpHandler, IPointerDownHandler
 
 
 
-    private Vector3 getClosestPointInCurrentLine(Vector3 point, int c_index, out int n_index)
+    public Vector3 getClosestPointInCurrentLine(Vector3 point, int c_index, out int n_index)
     {
-        //Do some trigonometry to find out the closes point in the vector to the mouse position
+        //Do some trigonometry to find out the closest point in the vector to the mouse position
         Vector3 SE = localDragLines[c_index + 1] - localDragLines[c_index];
         Vector3 CS = point - localDragLines[c_index];
 
