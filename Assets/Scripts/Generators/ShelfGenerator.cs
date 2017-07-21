@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections;
 using System;
+using System.Linq;
 
 [Serializable]
 public class ShelfGenerator : MonoBehaviour
@@ -16,9 +17,11 @@ public class ShelfGenerator : MonoBehaviour
     private GameObject shelf_mesh;
 
     public bool initialized = false;
-    public Boolean selected = false;
+    public bool selected = false;
 
-    private Vector3[] offsettedDragline;
+    public List<bool> childs_selected;
+
+    public Vector3[] offsettedDragline;
 
     public CollisionMap tempCollisionMap;    // Debugging
 
@@ -27,6 +30,9 @@ public class ShelfGenerator : MonoBehaviour
         onItemAttachedCallBacks = new List<OnItemAttachedCallback>();
         onItemDeattachedCallBacks = new List<OnItemDeattachedCallback>();
         onShelfClickedCallBacks = new List<OnShelfClickedCallback>();
+        onChildProductClickedCallBacks = new List<OnChildProductClickedCallback>();
+
+        childs_selected = new List<bool>();
 
         name = s.name;
         this_shelf = s;
@@ -260,11 +266,14 @@ public class ShelfGenerator : MonoBehaviour
         id2cube.Add(cube.GetInstanceID(), cube);
         InvalidateChildCollisionMaps();
 
+        childs_selected.Add(false);
+
 
         // Only need to update the UI for the products added after Start() has been executed 
         if(initialized == true)
         {
             ExecOnItemAttachedCallbacks(transform.parent.GetComponent<StandGenerator>(), this, cube.GetComponent<Drag3D>());
+            SetSelected();
         }
     }
 
@@ -277,6 +286,8 @@ public class ShelfGenerator : MonoBehaviour
         float c_pos;
         FindAttachmentPoint(cube.GetComponent<Drag3D>(), out new_pos, out c_index, out c_pos);
         cube.GetComponent<Drag3D>().SetStartingPosition(new_pos, c_index, c_pos);
+
+
     }
 
     private void FindAttachmentPoint(Drag3D new_prod, out Vector3 new_pos, out int c_index, out float c_pos)
@@ -305,18 +316,97 @@ public class ShelfGenerator : MonoBehaviour
     public void DeattachProduct(Drag3D leaving_product, bool trigger_callback = false)
     {
         InvalidateChildCollisionMaps();
+        int idx = cubes.IndexOf(leaving_product);
         cubes.Remove(leaving_product);
         cubesJSON.Remove(leaving_product.this_box);
         id2cube.Remove(leaving_product.gameObject.GetInstanceID());
+        childs_selected.RemoveAt(idx);
 
         if (trigger_callback)
             ExecOnItemDeattachedCallbacks(transform.parent.GetComponent<StandGenerator>(), this, leaving_product);
     }
 
+    // Click Events //
+
+    // Will be called from the children Drag3Ds
+    public void ChildWasClicked(Drag3D box)
+    {
+        if(!selected) { SetSelected(); }
+
+        int indx = cubes.IndexOf(box);
+
+        if(Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+        {
+            childs_selected[indx] = !childs_selected[indx];
+            cubes[indx].SetSelected(childs_selected[indx]);
+        }
+        else
+        {
+            for(int i = 0; i < childs_selected.Count; i++)
+            {
+                childs_selected[i] = false;
+                cubes[i].SetSelected(false);
+
+            }
+            childs_selected[indx] = true;
+            cubes[indx].SetSelected(true);
+        }
+
+        ExecOnChildProductClickedCallbacks(transform.GetComponentInParent<StandGenerator>(), this, childs_selected.ToArray());
+
+        transform.GetComponentInParent<StandGenerator>().OnChildShelfSelected(this);
+    }
+
+    public void ChildWasClickedFromExternal(bool[] selected)
+    {
+        childs_selected = selected.ToList();
+
+        for(int p = 0; p < childs_selected.Count; p++)
+        {
+            cubes[p].SetSelected(childs_selected[p]);
+        }
+    }
+
+    public void OnMeshClicked()
+    {
+        SetSelected();
+        ExecOnShelfClickedCallbacks();
+    }
+
+    public void OnSelectedFromUI(bool sel)
+    {
+        if (sel)
+        {
+            SetSelected();
+        }
+        else
+        {
+            ClearSelected();
+        }
+    }
+
+    public void SetSelected()
+    {
+        selected = true;
+        UpdateColor();
+        transform.GetComponentInParent<StandGenerator>().OnChildShelfSelected(this);
+    }
+
+    public void ClearSelected()
+    {
+        selected = false;
+        UpdateColor();
+
+        for (int p = 0; p < childs_selected.Count; p++)
+        {
+            childs_selected[p] = false;
+            cubes[p].SetSelected(false);
+        }
+    }
 
     // Callbacks //
 
-    public delegate void OnItemDeattachedCallback(StandGenerator stand, ShelfGenerator shelf, Drag3D cube);
+    public delegate void OnItemDeattachedCallback(StandGenerator stand, ShelfGenerator shelf, Drag3D cube, bool[] sel);
     private List<OnItemDeattachedCallback> onItemDeattachedCallBacks;
     public void RegisterOnItemDeattachedCallback(OnItemDeattachedCallback f)
     {
@@ -328,10 +418,10 @@ public class ShelfGenerator : MonoBehaviour
     }
     public void ExecOnItemDeattachedCallbacks(StandGenerator stand, ShelfGenerator shelf, Drag3D cube)
     {
-        foreach (OnItemDeattachedCallback f in onItemDeattachedCallBacks) { f(stand, shelf, cube); }
+        foreach (OnItemDeattachedCallback f in onItemDeattachedCallBacks) { f(stand, shelf, cube, childs_selected.ToArray()); }
     }
 
-    public delegate void OnItemAttachedCallback(StandGenerator stand, ShelfGenerator shelf, Drag3D cube);
+    public delegate void OnItemAttachedCallback(StandGenerator stand, ShelfGenerator shelf, Drag3D cube, bool[] sel);
     private List<OnItemAttachedCallback> onItemAttachedCallBacks;
     public void RegisterOnItemAttachedCallback(OnItemAttachedCallback f)
     {
@@ -343,7 +433,7 @@ public class ShelfGenerator : MonoBehaviour
     }
     public void ExecOnItemAttachedCallbacks(StandGenerator stand, ShelfGenerator shelf, Drag3D cube)
     {
-        foreach (OnItemAttachedCallback f in onItemAttachedCallBacks) { f(stand, shelf, cube); }
+        foreach (OnItemAttachedCallback f in onItemAttachedCallBacks) { f(stand, shelf, cube, childs_selected.ToArray()); }
     }
 
     public delegate void OnShelfClickedCallback(ShelfGenerator shg, StandGenerator stg);
@@ -361,12 +451,24 @@ public class ShelfGenerator : MonoBehaviour
         foreach (OnShelfClickedCallback f in onShelfClickedCallBacks) { f(this, transform.GetComponentInParent<StandGenerator>()); }
     }
 
-    // Others/Misc //
-
-    public void OnMeshMouseDown()
+    public delegate void OnChildProductClickedCallback(StandGenerator stg, ShelfGenerator shg, bool[] selected);
+    private List<OnChildProductClickedCallback> onChildProductClickedCallBacks;
+    public void RegisterOnChildProductClickedCallback(OnChildProductClickedCallback f)
     {
-        ExecOnShelfClickedCallbacks();
+        onChildProductClickedCallBacks.Add(f);
     }
+    public void UnRegisterOnChildProductClickedCallback(OnChildProductClickedCallback f)
+    {
+        onChildProductClickedCallBacks.Remove(f);
+    }
+    public void ExecOnChildProductClickedCallbacks(StandGenerator stg, ShelfGenerator shg, bool[] selected)
+    {
+        foreach (OnChildProductClickedCallback f in onChildProductClickedCallBacks) { f(stg,shg,selected); }
+    }
+
+
+
+    // Others/Misc //
 
     public void UpdateColor()
     {

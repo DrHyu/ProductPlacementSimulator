@@ -14,6 +14,7 @@ public class SceneGenerator : MonoBehaviour
     public bool AUTOSTART = false;
 
     public List<StandGenerator> stands;
+    public StandGenerator selected_stand;
 
     public Dictionary<int, GameObject> id2stand;
     
@@ -94,5 +95,16 @@ public class SceneGenerator : MonoBehaviour
     //        UIController uiController = UI.GetComponent<UIController>();
     //        uiController.SetStandList(stands);
     //    }
+    }
+
+
+    // Clear any other selected stand
+    public void ChildStandWasSelected(StandGenerator sg)
+    {
+        if(selected_stand != null && selected_stand != sg)
+        {
+            selected_stand.ClearSelected();
+        }
+        selected_stand = sg;
     }
 }

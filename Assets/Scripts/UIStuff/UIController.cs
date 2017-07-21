@@ -60,7 +60,7 @@ public class UIController : MonoBehaviour {
             standNames.Add(standList[i].ToString());
         }
 
-        UpdateUIState(0, 0,null, false, true);
+        UpdateUIState(0, 0,null, true, true);
         initialized = true;
 
         InitializeDBStuff(DBH.ReadFullDB());
@@ -282,13 +282,16 @@ public class UIController : MonoBehaviour {
         bool shelf_index_changed = shelf_index != shelf_dropdown_index;
 
         
-        _UItoSimulation.UISelectionChanged(stand_index, shelf_index, products_selected);
 
         if (trigger_was_simulation)
         {
             //stand_dropdown_index = stand_index;
             //shelf_dropdown_index = shelf_index;
             productIndexes = products_selected;
+        }
+        else
+        {
+            _UItoSimulation.UISelectionChanged(stand_index, shelf_index, products_selected);
         }
 
         if (initialize || trigger_was_simulation)

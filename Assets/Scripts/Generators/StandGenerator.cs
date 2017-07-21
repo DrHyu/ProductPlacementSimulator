@@ -16,6 +16,8 @@ public class StandGenerator : MonoBehaviour
     public bool selected = false;
     private bool initialized = false;
 
+    private ShelfGenerator child_selected = null;
+
     public int ViewMode = UItoSimulation.ALPHA_CHANGE;
     Dictionary<int, GameObject> id2shelf;
 
@@ -251,6 +253,41 @@ public class StandGenerator : MonoBehaviour
                 child.GetComponent<Renderer>().material.color = c;
 
             }
+        }
+    }
+
+
+    // Selection handling //
+    public void OnChildShelfSelected(ShelfGenerator shg)
+    {
+        if (!selected) { SetSelected(); }
+
+        // Clear previously selected child
+        if(child_selected != null && child_selected != shg)
+        {
+            child_selected.ClearSelected();
+        }
+        child_selected = shg;
+    }
+
+
+    public void SetSelected()
+    {
+        selected = true;
+        UpdateColor();
+
+        transform.GetComponentInParent<SceneGenerator>().ChildStandWasSelected(this);
+    }
+
+    public void ClearSelected()
+    {
+        selected = false;
+        UpdateColor();
+
+        if (child_selected != null)
+        {
+            child_selected.ClearSelected();
+            child_selected = null;
         }
     }
 

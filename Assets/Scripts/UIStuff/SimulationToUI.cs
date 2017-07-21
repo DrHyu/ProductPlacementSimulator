@@ -11,26 +11,7 @@ public class SimulationToUI : MonoBehaviour
     //TODO Not the way it should work ... Initialize should asume a clean state
     public void Initialize(List<StandGenerator> standList)
     {
-        if (standList != null)
-        {
-            foreach (StandGenerator sg in standList)
-            {
-                if(sg != null)
-                {
-                    foreach (Transform sh in sg.transform)
-                    {
-                        if(sh != null)
-                        {
-                            foreach (Transform box in sh.transform)
-                            {
-                                Drag3D d3d= box.gameObject.GetComponent<Drag3D>();
-                                if (d3d != null) { d3d.UnregisterOnClickCallback(ProductClickedInSimulation); }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+
         this.standList = standList;
         if (standList != null)
         {
@@ -43,12 +24,7 @@ public class SimulationToUI : MonoBehaviour
                     shg.RegisterOnItemAttachedCallback(OnProductAddedToShelf);
                     shg.RegisterOnItemDeattachedCallback(OnProdcutRemovedFromShelf);
                     shg.RegisterOnShelfClickedCallback(OnShelfClicked);
-
-                    foreach (Transform box in sh.transform)
-                    {
-                        Drag3D d3d = box.gameObject.GetComponent<Drag3D>();
-                        if (d3d != null) { d3d.RegisterOnClickCallback(ProductClickedInSimulation); }
-                    }
+                    shg.RegisterOnChildProductClickedCallback(OnProductClickedInSimulation);
                 }
             }
         }
@@ -56,28 +32,25 @@ public class SimulationToUI : MonoBehaviour
 
     public int p = 0;
 
-    public void ProductClickedInSimulation(StandGenerator stand , ShelfGenerator shelf, Drag3D box)
+    public void OnProductClickedInSimulation(StandGenerator stand, ShelfGenerator shelf, bool[] selected)
     {
         int stand_index = standList.IndexOf(stand);
         int shelf_index = standList[stand_index].shelves.IndexOf(shelf);
-        int box_index = standList[stand_index].shelves[shelf_index].cubes.IndexOf(box);
 
-        bool[] sel = UIController.GetSelectedArray(new int[] { box_index }, standList[stand_index].shelves[shelf_index].cubes.Count);
-
-        _UIController.UpdateUIState(stand_index, shelf_index, sel, true);
+        _UIController.UpdateUIState(stand_index, shelf_index, selected, true);
     }
 
     public void NotifyNewProductAdded(Drag3D new_product)
     {
-        new_product.RegisterOnClickCallback(ProductClickedInSimulation);
+       // new_product.RegisterOnClickCallback(ProductClickedInSimulation);
     }
 
     public void NotifyProductRemoved(Drag3D old_product)
     {
-        old_product.UnregisterOnClickCallback(ProductClickedInSimulation);
+       // old_product.UnregisterOnClickCallback(ProductClickedInSimulation);
     }
 
-    public void OnProdcutRemovedFromShelf(StandGenerator stand, ShelfGenerator shelf, Drag3D cube)
+    public void OnProdcutRemovedFromShelf(StandGenerator stand, ShelfGenerator shelf, Drag3D cube, bool[] selected)
     {
         // When a product is added or removed from a shelf we should update the UI 
         // To avoid any (out of bounds) errors and dislpaying incorrect information
@@ -85,19 +58,22 @@ public class SimulationToUI : MonoBehaviour
         if(stand == _UIController.standList[_UIController.stand_dropdown_index] &&
                 shelf == _UIController.standList[_UIController.stand_dropdown_index].shelves[_UIController.shelf_dropdown_index])
         {
-            _UIController.UpdateUIState(_UIController.stand_dropdown_index, _UIController.shelf_dropdown_index, null, true, true);
+            _UIController.UpdateUIState(_UIController.stand_dropdown_index, _UIController.shelf_dropdown_index, selected, true, true);
         }
     }
 
-    public void OnProductAddedToShelf(StandGenerator stand, ShelfGenerator shelf, Drag3D cube)
+    public void OnProductAddedToShelf(StandGenerator stand, ShelfGenerator shelf, Drag3D cube, bool[] selected)
     {
-        if (stand == _UIController.standList[_UIController.stand_dropdown_index] &&
-        shelf == _UIController.standList[_UIController.stand_dropdown_index].shelves[_UIController.shelf_dropdown_index])
+        //if (stand == _UIController.standList[_UIController.stand_dropdown_index] &&
+        //shelf == _UIController.standList[_UIController.stand_dropdown_index].shelves[_UIController.shelf_dropdown_index])
         {
-            int len = _UIController.standList[_UIController.stand_dropdown_index].shelves[_UIController.shelf_dropdown_index].cubes.Count;
+            int stand_idx = _UIController.standList.IndexOf(stand);
+            int shelf_idx = _UIController.standList[stand_idx].shelves.IndexOf(shelf);
 
-            bool[] sel = UIController.GetSelectedArray( new int[]{len-1}, len);
-            _UIController.UpdateUIState(_UIController.stand_dropdown_index, _UIController.shelf_dropdown_index, sel, true, true);
+            //int len = _UIController.standList[stand_idx].shelves[shelf_idx].cubes.Count;
+            //bool[] sel = UIController.GetSelectedArray( new int[]{len-1}, len);
+
+            _UIController.UpdateUIState(stand_idx, shelf_idx, selected, true, true);
         }
     }
 

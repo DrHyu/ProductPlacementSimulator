@@ -11,7 +11,7 @@ public class OnClickPassUp : MonoBehaviour {
 
         if(shg != null)
         {
-            shg.OnMeshMouseDown();
+            shg.OnMeshClicked();
         }
         else
         {

@@ -47,48 +47,43 @@ public class UItoSimulation : MonoBehaviour
         }
 
         //Clear any previously selected products
-        if (product_sel != null)
+        if (product_sel != null && product_sel.Length > 0)
         {
-            for (int i = 0; i < standList[stand_sel].shelves[shelf_sel].cubes.Count; i++)
-            {
-                standList[stand_sel].shelves[shelf_sel].cubes[i].GetComponent<Drag3D>().SetSelected(false);
-            }
+            bool[] clear_selection = UIController.GetSelectedArray(new int[] { }, product_sel.Length);
+            standList[stand_sel].shelves[shelf_sel].GetComponent<ShelfGenerator>().ChildWasClickedFromExternal(clear_selection);
         }
 
 
 
         // Clear any previously selected stands
-        standList[stand_sel].selected = false;
-        standList[stand_sel].UpdateColor();
-        if(view_mode == ACTIVE_CHANGE)
+        standList[stand_sel].ClearSelected();
+        if (view_mode == ACTIVE_CHANGE)
         {
             standList[stand_sel].gameObject.SetActive(false);
         }
 
         // Clear any previously selected shelfs
-        standList[stand_sel].shelves[shelf_sel].selected = false;
-        standList[stand_sel].shelves[shelf_sel].UpdateColor();
+        standList[stand_sel].shelves[shelf_sel].OnSelectedFromUI(false);
 
         // Highlight the selected stand
-        standList[stand_index].selected = true;
-        standList[stand_index].UpdateColor();
+        standList[stand_index].SetSelected();
         if (view_mode == ACTIVE_CHANGE)
         {
             standList[stand_index].gameObject.SetActive(true);
         }
 
-        // Highlight the shelf if no product is selected
-        standList[stand_index].shelves[shelf_index].selected = true;
-        standList[stand_index].shelves[shelf_index].UpdateColor();
+        // Highlight the shelf 
+        standList[stand_index].shelves[shelf_index].OnSelectedFromUI(true);
 
 
         // Highlight the newly selected products
-        if (product_index != null)
+        if (product_index != null && product_index.Length > 0)
         {
-            for (int i = 0; i < product_index.Length; i++)
-            {
-                standList[stand_index].shelves[shelf_index].cubes[i].gameObject.GetComponent<Drag3D>().SetSelected(product_index[i]);
-            }
+            standList[stand_index].shelves[shelf_index].GetComponent<ShelfGenerator>().ChildWasClickedFromExternal(product_index);
+            //for (int i = 0; i < product_index.Length; i++)
+            //{
+            //    standList[stand_index].shelves[shelf_index].cubes[i].gameObject.GetComponent<Drag3D>().SetSelected(product_index[i]);
+            //}
         }
 
         stand_sel = stand_index;

@@ -38,10 +38,12 @@ public class FloatingProducts : MonoBehaviour
 
         if( target_shelf == floatingProdOrigShelf)
         {
+            floatingProduct.InitializeDraglines(target_shelf.offsettedDragline);
             target_shelf.AttachProduct(floatingProduct.this_box, floatingProduct.gameObject);
         }
         else
         {
+            floatingProduct.InitializeDraglines(target_shelf.offsettedDragline);
             target_shelf.AttachProduct2(floatingProduct.this_box, floatingProduct.gameObject);
         }
 

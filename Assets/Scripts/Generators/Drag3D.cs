@@ -49,7 +49,7 @@ public class Drag3D : MonoBehaviour
 
     private void Update()
     {
-        if(dragging && ! deattached)
+        if((dragging || (Input.GetKey(KeyCode.M) && selected)) && ! deattached)
         {
             //int next_index;
             //// Try the new position
@@ -197,9 +197,14 @@ public class Drag3D : MonoBehaviour
         dragging = true;
         ExecOnDragStartCallbaks();
 
-        if (!selected)
+        // TODO: Implications ?
+        //if (!selected)
         {
-            ExecOnClickCallbacks(transform.parent.parent.GetComponent<StandGenerator>(), transform.parent.gameObject.GetComponent<ShelfGenerator>(), this);
+            ShelfGenerator sg = transform.GetComponentInParent<ShelfGenerator>();
+            if(sg != null)
+            {
+                sg.ChildWasClicked(this);
+            }
         }
 
         startDragTime = Time.time;
@@ -293,6 +298,9 @@ public class Drag3D : MonoBehaviour
 
         }
 
+        Gizmos.color = new Color(0.6f, 0.6f, 0.6f, 0.5f);
+        Gizmos.DrawCube(last_position, new Vector3(this_box.actual_width, this_box.actual_height, this_box.actual_depth));
+
     }
 
     /* - - - - - NON-STATIC METHODS - - - - - */
@@ -301,12 +309,8 @@ public class Drag3D : MonoBehaviour
     {
         this_box = b;
 
-        globalDragLines = _dragLines;
-        OffsetDraglineByCubeSize();
-        CalculateNormals();
+        InitializeDraglines(_dragLines);
 
-
-        onClickCallBacks = new List<OnClickCallback>();
         onMyCollisionEnterCallbacks = new List<OnMyCollisionEnterCallback>();
         onMyCollisionExitCallbacks = new List<OnMyCollisionExitCallback>();
         onDragStartCallBacks = new List<OnDragStartCallback>();
@@ -316,6 +320,13 @@ public class Drag3D : MonoBehaviour
 
         if (PA == null)
             Debug.LogError("Product Aesthetics not present");
+    }
+
+    public void InitializeDraglines(Vector3[] _dragLines)
+    {
+        globalDragLines = _dragLines;
+        OffsetDraglineByCubeSize();
+        CalculateNormals();
     }
 
     private Vector3 CalculateMousePosition()
@@ -502,22 +513,16 @@ public class Drag3D : MonoBehaviour
 
     /* - - - - - CALLLBACK REGISTER - - - - - */
 
-    public delegate void OnClickCallback(StandGenerator stand, ShelfGenerator shelf, Drag3D box);
     public delegate void OnMyCollisionEnterCallback(bool collided_upon);
     public delegate void OnMyCollisionExitCallback();
     public delegate void OnDragStartCallback();
     public delegate void OnDragEndCallback();
 
-    private List<OnClickCallback> onClickCallBacks;
     private List<OnMyCollisionEnterCallback> onMyCollisionEnterCallbacks;
     private List<OnMyCollisionExitCallback> onMyCollisionExitCallbacks;
     private List<OnDragStartCallback> onDragStartCallBacks;
     private List<OnDragEndCallback> onDragEndCallBacks;
 
-    public void RegisterOnClickCallback(OnClickCallback f)
-    {
-        onClickCallBacks.Add(f);
-    }
     public void RegisterOnMyCollisionEnterCallback(OnMyCollisionEnterCallback f)
     {
         onMyCollisionEnterCallbacks.Add(f);
@@ -535,19 +540,6 @@ public class Drag3D : MonoBehaviour
         onDragEndCallBacks.Add(f);
     }
 
-    public void UnregisterOnClickCallback(OnClickCallback f)
-    {
-        //foreach(OnClickCallback ff in onClickCallBacks)
-        //{
-        //    if(ff == f) { onClickCallBacks.Remove(f); }
-        //}
-        onClickCallBacks.Remove(f);
-    }
-
-    public void ExecOnClickCallbacks(StandGenerator stand, ShelfGenerator shelf, Drag3D box)
-    {
-        foreach (OnClickCallback f in onClickCallBacks) { f(stand, shelf, box);}
-    }
     public void ExecOnMyCollisionEnterCallbacks()
     {
         foreach (OnMyCollisionEnterCallback f in onMyCollisionEnterCallbacks) { f(collided_upon); }
