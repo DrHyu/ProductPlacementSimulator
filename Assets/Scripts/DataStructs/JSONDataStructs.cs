@@ -78,8 +78,11 @@ public class BoxJSON : DBItem
     public int z_repeats = 1;
 
 
-    public int current_index;
-    public float current_pos_relative;
+    public int cir;
+    public float cpr;
+
+    public int cil;
+    public float cpl;
 }
 
 

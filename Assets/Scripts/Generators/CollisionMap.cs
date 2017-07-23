@@ -129,66 +129,80 @@ public class CollisionMap
 
     public bool AmICollided(int ID, out int[] with)
     {
-
-        with = collisionNote[ID].ToArray();
-        return collisionNote[ID].Count > 0;
-    }
-
-    public static void CalculateCollisionMap(Vector3[] mDragLine, BoxJSON[] boxes, Drag3D[] cubes, Transform t, out CollisionMap cm, BoxJSON this_cube)
-    {
-
-
-        // Loop segment to segment and check if there is any box in the shelf that invades the space defined by the area above and below the segment
-
-        /*         \     |                   |     / 
-         *          \    |                   |    /
-         *        A  \   |                   |   /  C         
-         *            \  |                   |  /                 
-         *             \ |                   | /
-         *               |-------------------|    
-         *                         B
-         *                          
-         *  The dashed bottom segment (B) is the the one we are currently looping through, 
-         *  the inclined side lines (A,C) and the dashed botton line are the shelf 
-         *  and the vertical "|" lines is the space defined by the segment we are looping through
-         */
-
-        float RESOLUTION = 0.3f;
-        cm = new CollisionMap(mDragLine,cubes);
-
-        for (int p = 0; p < boxes.Length; p++)
+        if (collisionNote.ContainsKey(ID))
         {
-            UpdateCollisionMap(mDragLine,  cubes[p], t, ref cm);
+            with = collisionNote[ID].ToArray();
+            return collisionNote[ID].Count > 0;
+        }
+        else
+        {
+            with = new int[] { };
+            return false;
         }
     }
 
-    public static void UpdateCollisionMap(Vector3[] mDragLine, Drag3D cube, Transform t, ref CollisionMap cm)
+
+    public void UpdateCollisionMap(Drag3D cube)
     {
 
         float RESOLUTION = 0.05f;
 
         int ID = cube.gameObject.GetInstanceID();
 
-        // Clear out any conflict info caused by ID
-        //for(int i = 0; i < cm.perNodeCollision.Length; i++)
+        //if (collisionNote.ContainsKey(ID))
         //{
-        //    for(int p =0; p < cm.perNodeCollision[i].Count; p++)
+        //    List<int> keys = new List<int>(collisionNote.Keys);
+        //    // Clear any references to collisions caused to/from ID
+        //    foreach (int key in keys)
         //    {
-        //        if(cm.perNodeCollision[i][p].collisionCause == ID)
+        //        if (key == ID)
         //        {
-        //            cm.perNodeCollision[i].RemoveAt(p);
-        //            p--;
+        //            collisionNote[key].Clear();
+        //        }
+        //        else
+        //        {
+        //            for (int i = 0; i < collisionNote[key].Count; i++)
+        //            {
+        //                if (collisionNote[key][i] == ID)
+        //                {
+        //                    collisionNote[key].RemoveAt(i);
+        //                    i--;
+        //                }
+        //            }
         //        }
         //    }
+
+        //    // Clear any collision information previously calculated
+
+        //    for (int i = 0; i < perNodeCollision.Length; i++)
+        //    {
+        //        if (perNodeCollision[i] != null)
+        //            for (int p = 0; p < perNodeCollision[i].Count; p++)
+        //            {
+        //                if (perNodeCollision[i][p].left != null && perNodeCollision[i][p].left.ID == ID)
+        //                {
+        //                    perNodeCollision[i][p].left = null;
+        //                    //new CollisionInfo(ray_length, -1);
+        //                }
+        //                if (perNodeCollision[i][p].right != null && perNodeCollision[i][p].right.ID == ID)
+        //                {
+        //                    perNodeCollision[i][p].right = null;
+        //                    //new CollisionInfo(ray_length, -1);
+        //                }
+        //            }
+        //    }
+        //}
+        //else
+        //{
+        //    collisionNote.Add(ID, new List<int>());
         //}
 
-
-        for (int i = 0; i < mDragLine.Length - 1; i++)
+        for (int i = 0; i < mDraglines.Length - 1; i++)
         {
             BoxCollider b = cube.gameObject.GetComponent<BoxCollider>();
 
-            Vector3 segmentStart = mDragLine[i];
-            Vector3 segmentEnd = mDragLine[i + 1];
+            Vector3 segmentStart = mDraglines[i];
+            Vector3 segmentEnd = mDraglines[i + 1];
 
             segmentStart = cube.gameObject.transform.parent.TransformPoint(segmentStart);
             segmentEnd = cube.gameObject.transform.parent.TransformPoint(segmentEnd);
@@ -249,12 +263,21 @@ public class CollisionMap
                     float max_dist = r1hit ? contained ? ray_length - rch1.distance : rch1.distance : ray_length;
                     float min_dist = r2hit ? contained ? ray_length - rch2.distance : rch2.distance : ray_length;
 
-                    cm.AddCollisionInfo(i, z, min_dist, max_dist, ID, contained);
+                    AddCollisionInfo(i, z, min_dist, max_dist, ID, contained);
                 }
             }
         }
     }
 
+    public static void GenerateCollisionMap(Vector3[] mDragLine, BoxJSON[] boxes, Drag3D[] cubes, out CollisionMap cm)
+    {
+        cm = new CollisionMap(mDragLine, cubes);
+
+        for (int p = 0; p < boxes.Length; p++)
+        {
+            cm.UpdateCollisionMap(cubes[p]);
+        }
+    }
 }
 
 public class CollisionInfo

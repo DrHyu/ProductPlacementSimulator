@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class MiscFunc : MonoBehaviour
+public class MiscFunc
 {
 
     public static bool PointOnTopOfSegment(Vector2 point, Vector2 segmentStart, Vector2 segmentEnd, out Vector2 intersection)
@@ -241,4 +241,25 @@ public class MiscFunc : MonoBehaviour
         }
 
     }
+
+    public static bool PointIsInSegment(Vector2 a, Vector2 b, Vector2 c)
+    {
+
+        float crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y);
+        if (Mathf.Abs(crossproduct) > Mathf.Epsilon)
+            return false;
+
+        float dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y);
+        if (dotproduct < 0)
+            return false;
+
+        float squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+        if (dotproduct > squaredlengthba)
+            return false;
+
+        return true;
+    }
+
+
+
 }

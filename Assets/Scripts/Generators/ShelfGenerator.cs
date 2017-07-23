@@ -21,9 +21,33 @@ public class ShelfGenerator : MonoBehaviour
 
     public List<bool> childs_selected;
 
-    public Vector3[] offsettedDragline;
+    public Vector3[] dragLines;
 
-    public CollisionMap tempCollisionMap;    // Debugging
+    public CollisionMap sharedCollisionMap;
+
+    private void Update()
+    {
+        //Update the collision map for every cube that is selected
+        if (selected)
+        {
+            // Calculate the collision map upon first selection
+            //if (sharedCollisionMap == null)
+            //{
+            CollisionMap.GenerateCollisionMap(dragLines, cubesJSON.ToArray(), cubes.ToArray(), out sharedCollisionMap);
+            //}
+            //else
+            //{
+            //    for (int i = 0; i < childs_selected.Count; i++)
+            //    {
+            //        if (childs_selected[i])
+            //        {
+            //            sharedCollisionMap.UpdateCollisionMap(cubes[i]);
+            //        }
+            //    }
+            //}
+        }
+       //CollisionMap.CalculateCollisionMap(dragLines, cubesJSON.ToArray(), cubes.ToArray(), out sharedCollisionMap);
+    }
 
     public void Initialize(ShelfJSON s)
     {
@@ -90,7 +114,7 @@ public class ShelfGenerator : MonoBehaviour
         }
 
         int[] vertexR;
-        offsettedDragline = Drag3D.CalculateDragLines(dragline, 0.2f, out vertexR, false);
+        dragLines = Drag3D.CalculateDragLines(dragline, 0.2f, out vertexR, true);
 
         cubes       = new List<Drag3D>();
         cubesJSON = new List<BoxJSON>();
@@ -100,7 +124,7 @@ public class ShelfGenerator : MonoBehaviour
         {
             for (int p = 0; p < this_shelf.boxes.Length; p++)
             {
-                GameObject new_cube = GenerateProduct(this_shelf.boxes[p], offsettedDragline);
+                GameObject new_cube = GenerateProduct(this_shelf.boxes[p], dragLines);
                 new_cube.transform.SetParent(this.transform);
                 AttachProduct(this_shelf.boxes[p], new_cube);
             }
@@ -113,7 +137,7 @@ public class ShelfGenerator : MonoBehaviour
 
     public GameObject GenerateProduct(BoxJSON box)
     {
-        return GenerateProduct(box, offsettedDragline);
+        return GenerateProduct(box, dragLines);
     }
 
     public static GameObject GenerateProduct(BoxJSON box, Vector3[] shelf_draglines)
@@ -145,18 +169,8 @@ public class ShelfGenerator : MonoBehaviour
             gocube = new GameObject();
             List<GameObject> gos = new List<GameObject>();
 
-
-
-            //Vector3 final_size = new Vector3(box.width * box.x_repeats + ProductAesthetics.BOX_STACK_X_SPACING * box.x_repeats,
-            //                                box.height * box.y_repeats + ProductAesthetics.BOX_STACK_Y_SPACING * box.y_repeats, 
-            //                                box.depth * box.z_repeats + ProductAesthetics.BOX_STACK_Z_SPACING * box.z_repeats);
-
             Vector3 final_size = new Vector3(box.actual_width, box.actual_height, box.actual_depth);
             Vector3 original_size = new Vector3(box.width, box.height, box.depth);
-
-            //box.actual_width = final_size.x;
-            //box.actual_height = final_size.y;
-            //box.actual_depth = final_size.z;
 
             for (int x = 0; x < box.x_repeats; x++)
             {
@@ -195,15 +209,6 @@ public class ShelfGenerator : MonoBehaviour
 
             gocube.AddComponent<BoxCollider>();
             
-            //Bounds b = new Bounds();
-
-            //foreach (GameObject go in gos)
-            //{
-            //    b.Encapsulate(go.GetComponent<BoxCollider>().bounds);
-            //}
-            ////FitToChildren(gocube);
-
-            //gocube.GetComponent<BoxCollider>().center = final_size / 2 - new Vector3(box.width, box.height, box.depth)/2;
             gocube.GetComponent<BoxCollider>().center = Vector3.zero;
             gocube.GetComponent<BoxCollider>().size = final_size;
             gocube.GetComponent<BoxCollider>().isTrigger = true;
@@ -214,6 +219,13 @@ public class ShelfGenerator : MonoBehaviour
             rb.isKinematic = true;
             rb.useGravity = false;
         }
+
+        BoxJSON b = gocube.GetComponent<Drag3D>().box;
+
+        b.cir = 0;
+        b.cil = 0;
+        gocube.GetComponent<Drag3D>().CalculateMatchingPoint(b.cir, b.cpr, b.actual_width, true, ref b.cil, ref b.cpl);
+       
         return gocube;
     }
 
@@ -268,12 +280,15 @@ public class ShelfGenerator : MonoBehaviour
 
         childs_selected.Add(false);
 
+        cube.GetComponent<Drag3D>().SG = this;
+
 
         // Only need to update the UI for the products added after Start() has been executed 
         if(initialized == true)
         {
             ExecOnItemAttachedCallbacks(transform.parent.GetComponent<StandGenerator>(), this, cube.GetComponent<Drag3D>());
             SetSelected();
+            sharedCollisionMap.UpdateCollisionMap(cube.GetComponent<Drag3D>());
         }
     }
 
@@ -287,7 +302,6 @@ public class ShelfGenerator : MonoBehaviour
         FindAttachmentPoint(cube.GetComponent<Drag3D>(), out new_pos, out c_index, out c_pos);
         cube.GetComponent<Drag3D>().SetStartingPosition(new_pos, c_index, c_pos);
 
-
     }
 
     private void FindAttachmentPoint(Drag3D new_prod, out Vector3 new_pos, out int c_index, out float c_pos)
@@ -297,9 +311,9 @@ public class ShelfGenerator : MonoBehaviour
         float min_dist = float.PositiveInfinity;
         int  min_dist_indx = 0;
 
-        for (int c = 0; c < new_prod.localDragLines.Length-1 ; c ++)
+        for (int c = 0; c < new_prod.dLines.Length-1 ; c ++)
         {
-            float dist = (pos - new_prod.localDragLines[c]).sqrMagnitude;
+            float dist = (pos - new_prod.dLines[c]).sqrMagnitude;
 
             if(dist < min_dist)
             {
@@ -308,7 +322,7 @@ public class ShelfGenerator : MonoBehaviour
             }
         }
 
-        new_pos = new_prod.localDragLines[min_dist_indx];
+        new_pos = new_prod.dLines[min_dist_indx];
         c_pos = 0;
         c_index = min_dist_indx;
     }
@@ -318,7 +332,7 @@ public class ShelfGenerator : MonoBehaviour
         InvalidateChildCollisionMaps();
         int idx = cubes.IndexOf(leaving_product);
         cubes.Remove(leaving_product);
-        cubesJSON.Remove(leaving_product.this_box);
+        cubesJSON.Remove(leaving_product.box);
         id2cube.Remove(leaving_product.gameObject.GetInstanceID());
         childs_selected.RemoveAt(idx);
 
@@ -387,9 +401,10 @@ public class ShelfGenerator : MonoBehaviour
 
     public void SetSelected()
     {
+        transform.GetComponentInParent<StandGenerator>().OnChildShelfSelected(this);
+
         selected = true;
         UpdateColor();
-        transform.GetComponentInParent<StandGenerator>().OnChildShelfSelected(this);
     }
 
     public void ClearSelected()
@@ -492,24 +507,24 @@ public class ShelfGenerator : MonoBehaviour
 
         Gizmos.color = Color.red;
 
-        if (tempCollisionMap != null)
+        if (sharedCollisionMap != null)
         {
-            for (int i = 0; i < tempCollisionMap.perNodeCollision.Length - 1; i++)
+            for (int i = 0; i < sharedCollisionMap.perNodeCollision.Length - 1; i++)
             {
-                for (int p = 0; p < tempCollisionMap.perNodeCollision[i].Count; p++)
+                for (int p = 0; p < sharedCollisionMap.perNodeCollision[i].Count; p++)
                 {
 
-                    CollisionBucket cb = tempCollisionMap.perNodeCollision[i][p];
+                    CollisionBucket cb = sharedCollisionMap.perNodeCollision[i][p];
 
                     if (cb == null || cb.left == null || cb.right == null) { continue; }
 
-                    Vector3 sStart = tempCollisionMap.mDraglines[i];
-                    Vector3 sDir = (tempCollisionMap.mDraglines[i + 1] - sStart);
+                    Vector3 sStart = sharedCollisionMap.mDraglines[i];
+                    Vector3 sDir = (sharedCollisionMap.mDraglines[i + 1] - sStart);
                     Vector3 sPerp = (new Vector3(sDir.z, sDir.y, -sDir.x)).normalized;
 
                     // Need to find the 4 poins that define the area of the collision
 
-                    Vector3 c00 = sStart + (tempCollisionMap.resolution * (p + 0.5f)) * sDir.normalized;
+                    Vector3 c00 = sStart + (sharedCollisionMap.resolution * (p + 0.5f)) * sDir.normalized;
                     Vector3 c01 = c00 + cb.right.height * sPerp.normalized;
 
                     if (cb.right.height < 30)
