@@ -1,5 +1,4 @@
-﻿
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
 using System;
@@ -11,7 +10,7 @@ public class Drag3D : MonoBehaviour
 
     public BoxJSON box;
 
-    public ProductAesthetics PA; 
+    public ProductAesthetics PA;
     public FloatingProducts floatingObj;
     public ShelfGenerator SG;
 
@@ -113,7 +112,7 @@ public class Drag3D : MonoBehaviour
         // Move while deattached
         else if (deattached && dragging && selected)
         {
-            // When deattatched move wherever the mouse is 
+            // When deattatched move wherever the mouse is
             transform.localPosition = CalculateMousePosition();
         }
     }
@@ -276,6 +275,12 @@ public class Drag3D : MonoBehaviour
         Vector2 v1 = (right_p - left_p).to2DwoY();
         Vector2 v2 = (mousePos3D - transform.localPosition).to2DwoY();
 
+        /* Check if the mouse is on top of the box. Don't move if that is the case */
+        if( MiscFunc.IntersectRay2DvsSegment(v2, v1.PerpClockWise(), right_p, v1, out _ ))
+        {
+            return;
+        }
+
         float angle = Vector2.Angle(v1, v2);
 
         move_right = angle <= 90;
@@ -294,6 +299,7 @@ public class Drag3D : MonoBehaviour
         float time_speed_factor = time_since_start_drag > 1 ? 1 : time_since_start_drag;
 
         float mouse_distance_speed_factor = (mousePos3D - pos).magnitude > 10 ? 1 : (mousePos3D - pos).magnitude / 10f;
+
         // distance_to_move_budget_in_current_frame = drag_speed * time_since_last_frame * time_speed_factor
         // this will also be multiplied bye the mouse_position_speed_factor for each dragline
         float distance_to_move = DRAG_SPEED * Time.deltaTime * 2 * time_speed_factor * 3 * mouse_distance_speed_factor;
@@ -407,7 +413,7 @@ public class Drag3D : MonoBehaviour
 
     private void FindNextEmptySpace(GameObject other_cube)
     {
-        //TODO   
+        //TODO
     }
 
     private Vector3 CalculateCenterPosition(BoxJSON b)
@@ -626,7 +632,7 @@ public class Drag3D : MonoBehaviour
         if((P-dLines[c_index + r_or_l]).magnitude > p_width)
         {
             Vector3 dir = dLines[c_index + 1] - dLines[c_index];
-            Vector3 C = c_pos * dir + p_width * (dir.normalized * incr); 
+            Vector3 C = c_pos * dir + p_width * (dir.normalized * incr);
             index = c_index;
             pos = C.magnitude / dir.magnitude;
 
@@ -715,5 +721,5 @@ public class Drag3D : MonoBehaviour
         }
     }
 
-    
+
 }
