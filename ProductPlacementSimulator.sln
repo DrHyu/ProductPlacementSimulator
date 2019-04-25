@@ -1,13 +1,13 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2017
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductPlacementSimulator.Plugins", "ProductPlacementSimulator.Plugins.csproj", "{AAF058B7-FE0C-5372-1BF9-B7B60BC908BC}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{7C3F63D2-5D66-B2BC-3A89-38A020C264A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductPlacementSimulator", "ProductPlacementSimulator.csproj", "{E45C8ADF-8B90-51C8-18A7-17ABF2364C6B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-firstpass", "Assembly-CSharp-firstpass.csproj", "{E617B85F-6C54-254D-8257-14B527EC1CDA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductPlacementSimulator.Editor.Plugins", "ProductPlacementSimulator.Editor.Plugins.csproj", "{D00B1F8C-6AEF-BDC4-CF9B-590FFF68C6DB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor-firstpass", "Assembly-CSharp-Editor-firstpass.csproj", "{B7FCC8C2-3EA0-A7DF-8A62-92212B70F27F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductPlacementSimulator.Editor", "ProductPlacementSimulator.Editor.csproj", "{EBD2AB29-E8E2-5DE1-0E2B-8BAFD78C99E9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.csproj", "{183F9B8F-2241-4DCF-BBC3-F3909441C877}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,22 +15,22 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AAF058B7-FE0C-5372-1BF9-B7B60BC908BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AAF058B7-FE0C-5372-1BF9-B7B60BC908BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AAF058B7-FE0C-5372-1BF9-B7B60BC908BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AAF058B7-FE0C-5372-1BF9-B7B60BC908BC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E45C8ADF-8B90-51C8-18A7-17ABF2364C6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E45C8ADF-8B90-51C8-18A7-17ABF2364C6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E45C8ADF-8B90-51C8-18A7-17ABF2364C6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E45C8ADF-8B90-51C8-18A7-17ABF2364C6B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D00B1F8C-6AEF-BDC4-CF9B-590FFF68C6DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D00B1F8C-6AEF-BDC4-CF9B-590FFF68C6DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D00B1F8C-6AEF-BDC4-CF9B-590FFF68C6DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D00B1F8C-6AEF-BDC4-CF9B-590FFF68C6DB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EBD2AB29-E8E2-5DE1-0E2B-8BAFD78C99E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EBD2AB29-E8E2-5DE1-0E2B-8BAFD78C99E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EBD2AB29-E8E2-5DE1-0E2B-8BAFD78C99E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EBD2AB29-E8E2-5DE1-0E2B-8BAFD78C99E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C3F63D2-5D66-B2BC-3A89-38A020C264A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C3F63D2-5D66-B2BC-3A89-38A020C264A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C3F63D2-5D66-B2BC-3A89-38A020C264A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C3F63D2-5D66-B2BC-3A89-38A020C264A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E617B85F-6C54-254D-8257-14B527EC1CDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E617B85F-6C54-254D-8257-14B527EC1CDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E617B85F-6C54-254D-8257-14B527EC1CDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E617B85F-6C54-254D-8257-14B527EC1CDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7FCC8C2-3EA0-A7DF-8A62-92212B70F27F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7FCC8C2-3EA0-A7DF-8A62-92212B70F27F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7FCC8C2-3EA0-A7DF-8A62-92212B70F27F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7FCC8C2-3EA0-A7DF-8A62-92212B70F27F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{183F9B8F-2241-4DCF-BBC3-F3909441C877}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{183F9B8F-2241-4DCF-BBC3-F3909441C877}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{183F9B8F-2241-4DCF-BBC3-F3909441C877}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{183F9B8F-2241-4DCF-BBC3-F3909441C877}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
