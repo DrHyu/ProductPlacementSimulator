@@ -1,11 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class OnClickPassUp : MonoBehaviour {
+public class OnClickPassUp : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
 
-
-    private void OnMouseDown()
+    public void OnPointerDown(PointerEventData pointerEventData)
     {
         ShelfGenerator shg = transform.GetComponentInParent<ShelfGenerator>();
 
@@ -17,6 +17,11 @@ public class OnClickPassUp : MonoBehaviour {
         {
             Debug.LogError("Could not find shelf generator attached to this mesh");
         }
+    }
+
+    public void OnPointerUp(PointerEventData pointerEventData)
+    {
+        /* Dummy */
     }
 
 }

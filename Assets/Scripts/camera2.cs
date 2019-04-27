@@ -83,5 +83,19 @@ public class camera2 : MonoBehaviour
         float radius = Mathf.Max(max.x, Mathf.Max(max.y, max.z));
         float dist = radius / (Mathf.Sin(c.fieldOfView * Mathf.Deg2Rad / 2f));
         c.transform.position = go.transform.position + transform.rotation * Vector3.forward * -dist;
+
+
+        /* If we are focusing a product, position the camera on the front size of the product, not only zoom */
+        if(go.GetComponent("Drag3D") != null)
+        {
+            Vector3 normal = Vector3.zero;
+            go.GetComponent<Drag3D>().GetFrontVector(out normal);
+
+            
+            Debug.Log("Normal" + normal);
+            c.transform.position = go.transform.position + normal * 10;
+            Quaternion rotation = Quaternion.LookRotation(-normal, Vector3.up);
+            transform.rotation = rotation;
+        }
     }
 }

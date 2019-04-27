@@ -67,8 +67,6 @@ public class ProductAesthetics : MonoBehaviour
 
     private void Start()
     {
-        Material transparent_m = Resources.Load("Materials/StandardTransparent", typeof(Material)) as Material;
-
         if (!IS_GROUP_CONTROLLER)
         {
             if (box.img_path != null)
@@ -86,7 +84,13 @@ public class ProductAesthetics : MonoBehaviour
 
                 imageHolder.GetComponent<MeshCollider>().enabled = false;
 
-                Material mat = new Material(Resources.Load("Materials/PictureMaterial", typeof(Material)) as Material);
+                Material mat = new Material(Resources.Load("Materials/ProductMaterial", typeof(Material)) as Material);
+
+                Debug.Log("Mat" + mat);
+                if( mat == null)
+                {
+                    Debug.Log("IT WAS NULL !");
+                }
                 mat.mainTexture = Resources.Load(box.img_path, typeof(Texture)) as Texture;
                 imageHolder.GetComponent<MeshRenderer>().material = mat;
             }

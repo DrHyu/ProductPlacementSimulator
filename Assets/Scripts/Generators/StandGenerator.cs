@@ -142,36 +142,38 @@ public class StandGenerator : MonoBehaviour
 
     private void OnValidate()
     {
-
-        if(move_increment != Vector3.zero)
+        if(initialized)
         {
-            //transform.localPosition += move_increment;
-            this_stand.x_start += move_increment.x;
-            this_stand.y_start += move_increment.y;
-            this_stand.z_start += move_increment.z;
-            move_increment = Vector3.zero;
-        }
-
-        // Redraw evcerything
-        if (wall_obj != null)
-        {
-            for (int i = 0; i < wall_obj.Length; i++)
+            if(move_increment != Vector3.zero)
             {
-                GameObject.Destroy(wall_obj[i]);
+                //transform.localPosition += move_increment;
+                this_stand.x_start += move_increment.x;
+                this_stand.y_start += move_increment.y;
+                this_stand.z_start += move_increment.z;
+                move_increment = Vector3.zero;
             }
-            wall = null;
-            wall_obj = null;
-        }
 
-        if (shelves != null)
-        {
-            for (int i = 0; i < shelves.Count; i++)
+            // Redraw evcerything
+            if (wall_obj != null)
             {
-                GameObject.Destroy(shelves[i].gameObject);
+                for (int i = 0; i < wall_obj.Length; i++)
+                {
+                    GameObject.Destroy(wall_obj[i]);
+                }
+                wall = null;
+                wall_obj = null;
             }
-            shelves = null;
+
+            if (shelves != null)
+            {
+                for (int i = 0; i < shelves.Count; i++)
+                {
+                    GameObject.Destroy(shelves[i].gameObject);
+                }
+                shelves = null;
+            }
+            Initialize(this_stand);
         }
-        Initialize();
     }
 
     public override string ToString()
@@ -245,13 +247,12 @@ public class StandGenerator : MonoBehaviour
         {
             SetAlphaRecursively(child, a, m);
 
-            if (child.GetComponent<Renderer>() != null)
+            if (child.GetComponent<Renderer>() != null 
+                && child.GetComponent<Renderer>().material.HasProperty("_Color"))
             {
                 Color c = child.GetComponent<Renderer>().material.color;
                 c.a = a;
-                //child.GetComponent<Renderer>().material = m;
                 child.GetComponent<Renderer>().material.color = c;
-
             }
         }
     }

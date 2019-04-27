@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System;
 using UnityEngine.EventSystems;
 
-public class Drag3D : MonoBehaviour
+public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
 {
+
+    private bool initialized = false;
     public CollisionMap cm;
 
     public BoxJSON box;
@@ -79,7 +81,8 @@ public class Drag3D : MonoBehaviour
     }
 
     private void Start()
-    {
+    {   
+        initialized = true;
         transform.localPosition = CalculateCenterPosition(box);
         last_position = transform.localPosition;
 
@@ -119,11 +122,15 @@ public class Drag3D : MonoBehaviour
 
     public void OnValidate()
     {
-        // Re-calulate the local drag lines based on the new scale of the object
-        transform.localPosition = CalculateCenterPosition(box);
+        if(initialized)
+        {
+            // Re-calulate the local drag lines based on the new scale of the object
+            transform.localPosition = CalculateCenterPosition(box);
+        }
     }
 
-    private void OnMouseUp()
+    /* private void OnMouseUp() */
+    public void OnPointerUp(PointerEventData pointerEventData)
     {
         if (collided)
         {
@@ -137,7 +144,8 @@ public class Drag3D : MonoBehaviour
         ExecOnDragEndCallbaks();
     }
 
-    private void OnMouseDown()
+    /* private void OnMouseDown() */
+    public void OnPointerDown(PointerEventData pointerEventData)
     {
         distance = Vector3.Distance(GetComponent<Transform>().position, Camera.main.transform.position);
         dragging = true;
@@ -614,6 +622,21 @@ public class Drag3D : MonoBehaviour
         }
     }
 
+
+    /* Return a Vector Facing outwards from the face side of the product */
+    public bool GetFrontVector (out Vector3 result)
+    {
+        /* Check if Box has a position already */
+        if(PA != null && PA.transform.childCount > 0)
+        {
+            /* Get the Normals of the mesh of the plane used to hold the image of the product*/
+            Vector3[] normals = PA.transform.GetChild(0).GetComponent<MeshFilter>().mesh.normals;
+            result = PA.transform.GetChild(0).transform.TransformDirection(normals[0]);
+            return  true;
+        }
+        result = Vector3.zero;
+        return false;
+    }
     /* - - - - - STATIC METHODS - - - - - */
 
     public Vector3 CalculateMatchingPoint(int c_index, float c_pos, float p_width, bool given_is_right, ref int index, ref float pos)
