@@ -8,7 +8,7 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
 {
 
     private bool initialized = false;
-    public CollisionMap cm;
+    public CollisionMap2 cm;
 
     public BoxJSON box;
 
