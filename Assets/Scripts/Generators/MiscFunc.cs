@@ -260,6 +260,64 @@ public class MiscFunc
         return true;
     }
 
+    public static bool BoxesColide2D ( Vector2 a_center, Vector2 a_dimension, Vector2 b_center, Vector2 b_dimension )
+    {
+        Vector2[] av = new Vector2[4];
+        av[0] = new Vector2(a_center.x + a_dimension.x / 2f, a_center.y + a_dimension.y / 2f);
+        av[1] = new Vector2(a_center.x + a_dimension.x / 2f, a_center.y - a_dimension.y / 2f);
+        av[2] = new Vector2(a_center.x - a_dimension.x / 2f, a_center.y - a_dimension.y / 2f);
+        av[3] = new Vector2(a_center.x - a_dimension.x / 2f, a_center.y + a_dimension.y / 2f);
 
+        Vector2[] bv = new Vector2[4];
+        bv[0] = new Vector2(b_center.x + b_dimension.x / 2f, b_center.y + b_dimension.y / 2f);
+        bv[1] = new Vector2(b_center.x + b_dimension.x / 2f, b_center.y - b_dimension.y / 2f);
+        bv[2] = new Vector2(b_center.x - b_dimension.x / 2f, b_center.y - b_dimension.y / 2f);
+        bv[3] = new Vector2(b_center.x - b_dimension.x / 2f, b_center.y + b_dimension.y / 2f);
+
+        /* At most four axis checks are needed */
+        Vector2[] check_axis = new Vector2[4];
+        check_axis[0] = (av[1] - av[0]).PerpClockWise();
+        check_axis[1] = (av[2] - av[1]).PerpClockWise();
+        check_axis[2] = (bv[1] - bv[0]).PerpClockWise();
+        check_axis[3] = (bv[2] - bv[1]).PerpClockWise();
+
+
+        for(int i = 0; i < check_axis.Length; i ++)
+        {
+            Vector2 minmax_a = GetMaxMinProjectionToAxis(av, check_axis[i]);
+            Vector2 minmax_b = GetMaxMinProjectionToAxis(bv, check_axis[i]);
+
+            /* Found one axis which does not crash */
+            if(minmax_a.y < minmax_b.x || minmax_b.y < minmax_a.x)
+            {
+                return false;
+            }
+        }
+
+        /* All axis collided, so we are overlaping */
+        return true;   
+    }
+
+    private static Vector2 GetMaxMinProjectionToAxis( Vector2[] points , Vector2 Axis)
+    {
+        float min_proj = Vector2.Dot(points[0], Axis);
+        float max_proj = Vector2.Dot(points[0], Axis);
+
+        Axis = Axis.normalized;
+        for(int i = 1; i < points.Length; i ++)
+        {
+            float curr = Vector2.Dot(points[i], Axis);
+            if(curr < min_proj)
+            {
+                min_proj = curr;
+            }
+            else if (curr > max_proj)
+            {
+                max_proj = curr;
+            }
+        }
+        return new Vector2(min_proj, max_proj);
+    }
 
 }
+
