@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class CollisionMap
+public class CollisionMap1
 {
     // Eeach node has it's own collision infos in it's relevant position in the array
 
@@ -17,7 +17,7 @@ public class CollisionMap
     Dictionary<int, List<int>> collisionNote;
 
 
-    public CollisionMap(Vector3[] dragLines, Drag3D[] cubes)
+    public CollisionMap1(Vector3[] dragLines, Drag3D[] cubes)
     {
         perNodeCollision = new List<CollisionBucket>[dragLines.Length];
 
@@ -269,9 +269,9 @@ public class CollisionMap
         }
     }
 
-    public static void GenerateCollisionMap(Vector3[] mDragLine, BoxJSON[] boxes, Drag3D[] cubes, out CollisionMap cm)
+    public static void GenerateCollisionMap(Vector3[] mDragLine, BoxJSON[] boxes, Drag3D[] cubes, out CollisionMap1 cm)
     {
-        cm = new CollisionMap(mDragLine, cubes);
+        cm = new CollisionMap1(mDragLine, cubes);
 
         for (int p = 0; p < boxes.Length; p++)
         {

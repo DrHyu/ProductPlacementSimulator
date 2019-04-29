@@ -8,7 +8,7 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
 {
 
     private bool initialized = false;
-    public CollisionMap cm;
+    public CollisionMap2 cm;
 
     public BoxJSON box;
 
@@ -26,9 +26,9 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
     public bool deattached = false;
 
     // Used to keep history of the last valid position and index to recover in case of a failed drag
-    private Vector3 last_position;
-    private int last_index = 0;
-    private float last_pos_rel = 0;
+    public Vector3 last_position;
+    public int last_index = 0;
+    public float last_pos_rel = 0;
 
     // The position of the cube is stored as:
     //  1. Index of the vertex in the dragline
@@ -54,6 +54,9 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
             CalculateNextPosition(ref box);
             transform.localPosition = CalculateCenterPosition(box);
 
+            /* Update the collision AFTER the position has been updated */
+            SG.sharedCollisionMap.UpdateCollisionMap(this);
+
             int[] collided_with;
             if (SG.sharedCollisionMap.AmICollided(gameObject.GetInstanceID(), out collided_with))
             {
@@ -72,7 +75,7 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
                 }
                 collided = false;
 
-                // This are used to reover the last valid position if, for example, the user stops dragging a block during an intercception
+                // This are used to recover the last valid position if, for example, the user stops dragging a block during an intercception
                 last_index = box.cir;
                 last_pos_rel = box.cpr;
                 last_position = transform.localPosition;
@@ -417,6 +420,8 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
         transform.localPosition = last_position;
         box.cir = last_index;
         box.cpr = last_pos_rel;
+
+        CalculateMatchingPoint(box.cir, box.cpr, box.actual_width, true, ref box.cil, ref box.cpl);
     }
 
     private void FindNextEmptySpace(GameObject other_cube)
@@ -433,6 +438,14 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
         return right_p + (perp_dir * -box.actual_depth / 2) + ((left_p - right_p) / 2) + new Vector3(0,box.actual_height/2,0);
     }
 
+    public void GetBottomVertices( out Vector2[] v )
+    {
+        v = new Vector2[4];
+        v[0] = (transform.rotation * new Vector3(box.actual_width / 2.0f, 0, box.actual_depth / 2.0f) + transform.position).to2DwoY();
+        v[1] = (transform.rotation * new Vector3(box.actual_width / 2.0f, 0, -box.actual_depth / 2.0f) + transform.position).to2DwoY();
+        v[2] = (transform.rotation * new Vector3(-box.actual_width / 2.0f, 0, -box.actual_depth / 2.0f) + transform.position).to2DwoY();
+        v[3] = (transform.rotation * new Vector3(-box.actual_width / 2.0f, 0, box.actual_depth / 2.0f) + transform.position).to2DwoY();
+    }
 
     /* - - - - - CALLLBACK REGISTER - - - - - */
 

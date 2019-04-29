@@ -15,7 +15,7 @@ public class MiscFunc
             return false;
         }
         // Check if the intersection point is within the segment start and end
-        // Check this to avoid a division by 0
+        // Check this to vertices_aoid a division by 0
 
         Vector2 temp = (intersection - segmentStart);
 
@@ -260,6 +260,53 @@ public class MiscFunc
         return true;
     }
 
+    //public static bool BoxesColide2D ( Vector2 a_center, Vector2 a_dimension, Vector2 b_center, Vector2 b_dimension )
+    public static bool BoxesColide2D ( Vector2 [] vertices_a, Vector2[] vertices_b )
+    {
+        /* At most four axis checks are needed */
+        Vector2[] check_axis = new Vector2[4];
+        check_axis[0] = (vertices_a[1] - vertices_a[0]).PerpClockWise();
+        check_axis[1] = (vertices_a[2] - vertices_a[1]).PerpClockWise();
+        check_axis[2] = (vertices_b[1] - vertices_b[0]).PerpClockWise();
+        check_axis[3] = (vertices_b[2] - vertices_b[1]).PerpClockWise();
 
+
+        for(int i = 0; i < check_axis.Length; i ++)
+        {
+            Vector2 minmax_a = GetMaxMinProjectionToAxis(vertices_a, check_axis[i]);
+            Vector2 minmax_b = GetMaxMinProjectionToAxis(vertices_b, check_axis[i]);
+
+            /* Found one axis which does not crash */
+            if(minmax_a.y < minmax_b.x || minmax_b.y < minmax_a.x)
+            {
+                return false;
+            }
+        }
+
+        /* All axis collided, so we are overlaping */
+        return true;   
+    }
+
+    private static Vector2 GetMaxMinProjectionToAxis( Vector2[] points , Vector2 Axis)
+    {
+        float min_proj = Vector2.Dot(points[0], Axis);
+        float max_proj = Vector2.Dot(points[0], Axis);
+
+        Axis = Axis.normalized;
+        for(int i = 1; i < points.Length; i ++)
+        {
+            float curr = Vector2.Dot(points[i], Axis);
+            if(curr < min_proj)
+            {
+                min_proj = curr;
+            }
+            else if (curr > max_proj)
+            {
+                max_proj = curr;
+            }
+        }
+        return new Vector2(min_proj, max_proj);
+    }
 
 }
+
