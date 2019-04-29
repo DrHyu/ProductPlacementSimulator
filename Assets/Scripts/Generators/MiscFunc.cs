@@ -15,7 +15,7 @@ public class MiscFunc
             return false;
         }
         // Check if the intersection point is within the segment start and end
-        // Check this to avoid a division by 0
+        // Check this to vertices_aoid a division by 0
 
         Vector2 temp = (intersection - segmentStart);
 
@@ -260,32 +260,21 @@ public class MiscFunc
         return true;
     }
 
-    public static bool BoxesColide2D ( Vector2 a_center, Vector2 a_dimension, Vector2 b_center, Vector2 b_dimension )
+    //public static bool BoxesColide2D ( Vector2 a_center, Vector2 a_dimension, Vector2 b_center, Vector2 b_dimension )
+    public static bool BoxesColide2D ( Vector2 [] vertices_a, Vector2[] vertices_b )
     {
-        Vector2[] av = new Vector2[4];
-        av[0] = new Vector2(a_center.x + a_dimension.x / 2f, a_center.y + a_dimension.y / 2f);
-        av[1] = new Vector2(a_center.x + a_dimension.x / 2f, a_center.y - a_dimension.y / 2f);
-        av[2] = new Vector2(a_center.x - a_dimension.x / 2f, a_center.y - a_dimension.y / 2f);
-        av[3] = new Vector2(a_center.x - a_dimension.x / 2f, a_center.y + a_dimension.y / 2f);
-
-        Vector2[] bv = new Vector2[4];
-        bv[0] = new Vector2(b_center.x + b_dimension.x / 2f, b_center.y + b_dimension.y / 2f);
-        bv[1] = new Vector2(b_center.x + b_dimension.x / 2f, b_center.y - b_dimension.y / 2f);
-        bv[2] = new Vector2(b_center.x - b_dimension.x / 2f, b_center.y - b_dimension.y / 2f);
-        bv[3] = new Vector2(b_center.x - b_dimension.x / 2f, b_center.y + b_dimension.y / 2f);
-
         /* At most four axis checks are needed */
         Vector2[] check_axis = new Vector2[4];
-        check_axis[0] = (av[1] - av[0]).PerpClockWise();
-        check_axis[1] = (av[2] - av[1]).PerpClockWise();
-        check_axis[2] = (bv[1] - bv[0]).PerpClockWise();
-        check_axis[3] = (bv[2] - bv[1]).PerpClockWise();
+        check_axis[0] = (vertices_a[1] - vertices_a[0]).PerpClockWise();
+        check_axis[1] = (vertices_a[2] - vertices_a[1]).PerpClockWise();
+        check_axis[2] = (vertices_b[1] - vertices_b[0]).PerpClockWise();
+        check_axis[3] = (vertices_b[2] - vertices_b[1]).PerpClockWise();
 
 
         for(int i = 0; i < check_axis.Length; i ++)
         {
-            Vector2 minmax_a = GetMaxMinProjectionToAxis(av, check_axis[i]);
-            Vector2 minmax_b = GetMaxMinProjectionToAxis(bv, check_axis[i]);
+            Vector2 minmax_a = GetMaxMinProjectionToAxis(vertices_a, check_axis[i]);
+            Vector2 minmax_b = GetMaxMinProjectionToAxis(vertices_b, check_axis[i]);
 
             /* Found one axis which does not crash */
             if(minmax_a.y < minmax_b.x || minmax_b.y < minmax_a.x)

@@ -54,6 +54,9 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
             CalculateNextPosition(ref box);
             transform.localPosition = CalculateCenterPosition(box);
 
+            /* Update the collision AFTER the position has been updated */
+            SG.sharedCollisionMap.UpdateCollisionMap(this);
+
             int[] collided_with;
             if (SG.sharedCollisionMap.AmICollided(gameObject.GetInstanceID(), out collided_with))
             {
@@ -72,7 +75,7 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
                 }
                 collided = false;
 
-                // This are used to reover the last valid position if, for example, the user stops dragging a block during an intercception
+                // This are used to recover the last valid position if, for example, the user stops dragging a block during an intercception
                 last_index = box.cir;
                 last_pos_rel = box.cpr;
                 last_position = transform.localPosition;

@@ -8,6 +8,9 @@ public class CollisionMap2
     public Drag3D[] cubes;
     Dictionary<int, List<int>> collisionNote;
 
+    public Vector2[] vertices_a ;
+    public Vector2[] vertices_b ;
+
     public CollisionMap2(Drag3D[] c)
     {
         cubes = c;
@@ -44,17 +47,36 @@ public class CollisionMap2
 
         for (int p = 0; p < cubes.Length; p++)
         {
-            collisionNote[ID].Clear();
-
             if (cubes[p].gameObject.GetInstanceID() != ID)
             {
-                if(MiscFunc.BoxesColide2D(cube.transform.position.to2DwoY(), 
-                                        new Vector2(cube.box.actual_width, cube.box.actual_depth), 
-                                        cubes[p].transform.position.to2DwoY(), 
-                                        new Vector2(cubes[p].box.actual_width, cubes[p].box.actual_depth)))
+                collisionNote[ID].Clear();
+
+                vertices_a = new Vector2[4];
+                vertices_b = new Vector2[4];
+
+                vertices_a[0] = (cube.gameObject.transform.rotation * new Vector3(cube.box.actual_width / 2.0f, 0, cube.box.actual_depth / 2.0f) + cube.transform.position).to2DwoY();
+                vertices_a[1] = (cube.gameObject.transform.rotation * new Vector3(cube.box.actual_width / 2.0f, 0, -cube.box.actual_depth / 2.0f) + cube.transform.position).to2DwoY();
+                vertices_a[2] = (cube.gameObject.transform.rotation * new Vector3(-cube.box.actual_width / 2.0f, 0, -cube.box.actual_depth / 2.0f) + cube.transform.position).to2DwoY();
+                vertices_a[3] = (cube.gameObject.transform.rotation * new Vector3(-cube.box.actual_width / 2.0f, 0, cube.box.actual_depth / 2.0f) + cube.transform.position).to2DwoY();
+
+                vertices_b[0] = (cubes[p].gameObject.transform.rotation * new Vector3( cubes[p].box.actual_width / 2.0f, 0,  cubes[p].box.actual_depth / 2.0f) + cubes[p].transform.position).to2DwoY();
+                vertices_b[1] = (cubes[p].gameObject.transform.rotation * new Vector3( cubes[p].box.actual_width / 2.0f, 0, -cubes[p].box.actual_depth / 2.0f) + cubes[p].transform.position).to2DwoY();
+                vertices_b[2] = (cubes[p].gameObject.transform.rotation * new Vector3(-cubes[p].box.actual_width / 2.0f, 0, -cubes[p].box.actual_depth / 2.0f) + cubes[p].transform.position).to2DwoY();
+                vertices_b[3] = (cubes[p].gameObject.transform.rotation * new Vector3(-cubes[p].box.actual_width / 2.0f, 0,  cubes[p].box.actual_depth / 2.0f) + cubes[p].transform.position).to2DwoY();
+
+                if (MiscFunc.BoxesColide2D(vertices_a,vertices_b))
                 {
                     collisionNote[ID].Add(cubes[p].gameObject.GetInstanceID());
-                    collisionNote[cubes[p].gameObject.GetInstanceID()].Add(ID);
+
+                    if (!collisionNote[cubes[p].gameObject.GetInstanceID()].Contains(ID))
+                    {
+                        collisionNote[cubes[p].gameObject.GetInstanceID()].Add(ID);
+                    }
+                }
+                /* If did not colide and was previosuly colided clear the colision Note */
+                else if(collisionNote[cubes[p].gameObject.GetInstanceID()].Contains(ID))
+                {
+                    collisionNote[cubes[p].gameObject.GetInstanceID()].Remove(ID);
                 }
             }
         }        

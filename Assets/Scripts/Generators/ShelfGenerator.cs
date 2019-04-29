@@ -30,19 +30,19 @@ public class ShelfGenerator : MonoBehaviour
         //Update the collision map for every cube that is selected
         if (selected)
         {
-            // Calculate the collision map upon first selection
+            //// Calculate the collision map upon first selection
             //if (sharedCollisionMap == null)
             //{
-            //CollisionMap1.GenerateCollisionMap(dragLines, cubesJSON.ToArray(), cubes.ToArray(), out sharedCollisionMap);
-            CollisionMap2.GenerateCollisionMap(cubes.ToArray(), out sharedCollisionMap);
+            //    //CollisionMap1.GenerateCollisionMap(dragLines, cubesJSON.ToArray(), cubes.ToArray(), out sharedCollisionMap);
+            //    CollisionMap2.GenerateCollisionMap(cubes.ToArray(), out sharedCollisionMap);
             //}
             //else
             //{
             //    for (int i = 0; i < childs_selected.Count; i++)
             //    {
-            //        if (childs_selected[i])
+            //        if (childs_selected[i] && cubes[i].dragging)
             //        {
-            //            sharedCollisionMap.UpdateCollisionMap(cubes[i]);
+            //            //sharedCollisionMap.UpdateCollisionMap(cubes[i]);
             //        }
             //    }
             //}
@@ -130,6 +130,8 @@ public class ShelfGenerator : MonoBehaviour
                 AttachProduct(this_shelf.boxes[p], new_cube);
             }
         }
+
+        CollisionMap2.GenerateCollisionMap(cubes.ToArray(), out sharedCollisionMap);
 
         initialized = true;
     }
@@ -289,7 +291,9 @@ public class ShelfGenerator : MonoBehaviour
         {
             ExecOnItemAttachedCallbacks(transform.parent.GetComponent<StandGenerator>(), this, cube.GetComponent<Drag3D>());
             SetSelected();
-            sharedCollisionMap.UpdateCollisionMap(cube.GetComponent<Drag3D>());
+            //sharedCollisionMap.UpdateCollisionMap(cube.GetComponent<Drag3D>());
+            CollisionMap2.GenerateCollisionMap(cubes.ToArray(), out sharedCollisionMap);
+
         }
     }
 
@@ -508,41 +512,53 @@ public class ShelfGenerator : MonoBehaviour
 
         Gizmos.color = Color.red;
 
-        //if (sharedCollisionMap != null)
-        //{
-        //    for (int i = 0; i < sharedCollisionMap.perNodeCollision.Length - 1; i++)
-        //    {
-        //        for (int p = 0; p < sharedCollisionMap.perNodeCollision[i].Count; p++)
-        //        {
+        if (sharedCollisionMap != null)
+        {
+            if (sharedCollisionMap.vertices_a != null)
+            {
+                for (int i = 0; i < sharedCollisionMap.vertices_a.Length; i++)
+                {
+                    Gizmos.DrawLine(sharedCollisionMap.vertices_a[i].to3DwY(0), sharedCollisionMap.vertices_a[i].to3DwY(10));
+                }
 
-        //            CollisionBucket cb = sharedCollisionMap.perNodeCollision[i][p];
+                for (int i = 0; i < sharedCollisionMap.vertices_b.Length; i++)
+                {
+                    Gizmos.DrawLine(sharedCollisionMap.vertices_b[i].to3DwY(0), sharedCollisionMap.vertices_b[i].to3DwY(10));
+                }
+            }
+            //for (int i = 0; i < sharedCollisionMap.perNodeCollision.Length - 1; i++)
+            //{
+            //    for (int p = 0; p < sharedCollisionMap.perNodeCollision[i].Count; p++)
+            //    {
 
-        //            if (cb == null || cb.left == null || cb.right == null) { continue; }
+            //        CollisionBucket cb = sharedCollisionMap.perNodeCollision[i][p];
 
-        //            Vector3 sStart = sharedCollisionMap.mDraglines[i];
-        //            Vector3 sDir = (sharedCollisionMap.mDraglines[i + 1] - sStart);
-        //            Vector3 sPerp = (new Vector3(sDir.z, sDir.y, -sDir.x)).normalized;
+            //        if (cb == null || cb.left == null || cb.right == null) { continue; }
 
-        //            // Need to find the 4 poins that define the area of the collision
+            //        Vector3 sStart = sharedCollisionMap.mDraglines[i];
+            //        Vector3 sDir = (sharedCollisionMap.mDraglines[i + 1] - sStart);
+            //        Vector3 sPerp = (new Vector3(sDir.z, sDir.y, -sDir.x)).normalized;
 
-        //            Vector3 c00 = sStart + (sharedCollisionMap.resolution * (p + 0.5f)) * sDir.normalized;
-        //            Vector3 c01 = c00 + cb.right.height * sPerp.normalized;
+            //        // Need to find the 4 poins that define the area of the collision
 
-        //            if (cb.right.height < 30)
-        //            {
-        //                Gizmos.DrawLine(c00, c01);
-        //            }
+            //        Vector3 c00 = sStart + (sharedCollisionMap.resolution * (p + 0.5f)) * sDir.normalized;
+            //        Vector3 c01 = c00 + cb.right.height * sPerp.normalized;
 
-        //            c01 = c00 + cb.left.height * -sPerp.normalized;
+            //        if (cb.right.height < 30)
+            //        {
+            //            Gizmos.DrawLine(c00, c01);
+            //        }
 
-        //            if (cb.left.height < 30)
-        //            {
-        //                Gizmos.DrawLine(c00, c01);
-        //            }
-        //        }
-        //    }
+            //        c01 = c00 + cb.left.height * -sPerp.normalized;
 
-        //}
+            //        if (cb.left.height < 30)
+            //        {
+            //            Gizmos.DrawLine(c00, c01);
+            //        }
+            //    }
+            //}
+
+        }
 
 
     }
