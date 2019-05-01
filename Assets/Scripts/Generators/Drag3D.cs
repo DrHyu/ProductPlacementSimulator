@@ -424,11 +424,6 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
         CalculateMatchingPoint(box.cir, box.cpr, box.actual_width, true, ref box.cil, ref box.cpl);
     }
 
-    private void FindNextEmptySpace(GameObject other_cube)
-    {
-        //TODO
-    }
-
     private Vector3 CalculateCenterPosition(BoxJSON b)
     {
         Vector3 right_p = dLines[box.cir] + (dLines[box.cir + 1] - dLines[box.cir]) * box.cpr;
@@ -651,6 +646,31 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
         return false;
     }
     /* - - - - - STATIC METHODS - - - - - */
+
+    public static int CompareByPosition(Drag3D a, Drag3D b)
+    {
+        /* The closer to the initial dragline the higher result */
+        if(a.box.cir < b.box.cir)
+        {
+            return 1;
+        }
+        else if(a.box.cir > b.box.cir)
+        {
+            return -1;
+        }
+        else if(a.box.cpr < b.box.cpr)
+        {
+            return 1;
+        }
+        else if (a.box.cpr > b.box.cpr)
+        {
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
 
     public Vector3 CalculateMatchingPoint(int c_index, float c_pos, float p_width, bool given_is_right, ref int index, ref float pos)
     {

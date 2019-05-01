@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public class CollisionMap2
 {
@@ -81,6 +82,30 @@ public class CollisionMap2
             cm.UpdateCollisionMap(cubes[p]);
         }
     }
+
+    public void FindNextEmptySpace(GameObject other_cube)
+    {
+        /* Find the next empty space in the draglines */
+
+        /* Check if it ispossible to add it to the right of the first product */
+
+        /* Sort the cubes according to their positions right to left */
+
+        List<Drag3D> ordered = new List<Drag3D>();
+
+        for(int i = 0; i < cubes.Length; i ++)
+        {
+            ordered.Add(cubes[i]);
+        }
+        ordered.Sort(Drag3D.CompareByPosition);
+
+
+
+
+        /* If not possible check the right of the next prodctucts */
+
+    }
+
 }
 
 
