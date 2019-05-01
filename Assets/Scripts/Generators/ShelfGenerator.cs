@@ -131,7 +131,7 @@ public class ShelfGenerator : MonoBehaviour
             }
         }
 
-        CollisionMap2.GenerateCollisionMap(cubes.ToArray(), out sharedCollisionMap);
+        CollisionMap2.GenerateCollisionMap(cubes.ToArray(), dragline, out sharedCollisionMap);
 
         initialized = true;
     }
@@ -292,21 +292,25 @@ public class ShelfGenerator : MonoBehaviour
             ExecOnItemAttachedCallbacks(transform.parent.GetComponent<StandGenerator>(), this, cube.GetComponent<Drag3D>());
             SetSelected();
             //sharedCollisionMap.UpdateCollisionMap(cube.GetComponent<Drag3D>());
-            CollisionMap2.GenerateCollisionMap(cubes.ToArray(), out sharedCollisionMap);
+            CollisionMap2.GenerateCollisionMap(cubes.ToArray(), dragLines, out sharedCollisionMap);
 
         }
     }
 
     public void AttachProduct2(BoxJSON b, GameObject cube)
     {
-        AttachProduct(b, cube);
+        Drag3D d = cube.GetComponent<Drag3D>();
+        d.box = b.Copy();
+        if (sharedCollisionMap.FindNextEmptySpace(ref d))
+        {
+            AttachProduct(b, cube);
 
-        Vector3 new_pos;
-        int c_index;
-        float c_pos;
-        FindAttachmentPoint(cube.GetComponent<Drag3D>(), out new_pos, out c_index, out c_pos);
-        cube.GetComponent<Drag3D>().SetStartingPosition(new_pos, c_index, c_pos);
-
+            Vector3 new_pos;
+            int c_index;
+            float c_pos;
+            FindAttachmentPoint(cube.GetComponent<Drag3D>(), out new_pos, out c_index, out c_pos);
+            cube.GetComponent<Drag3D>().SetStartingPosition(new_pos, c_index, c_pos);
+        }
     }
 
     private void FindAttachmentPoint(Drag3D new_prod, out Vector3 new_pos, out int c_index, out float c_pos)

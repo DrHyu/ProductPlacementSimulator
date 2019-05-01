@@ -55,6 +55,8 @@ public class ShelfJSON
 [Serializable]
 public class BoxJSON : DBItem
 {
+    public BoxJSON() { }
+
     public BoxJSON(DBItem ref_item)
     {
         this.width = ref_item.width;
@@ -67,6 +69,24 @@ public class BoxJSON : DBItem
         this.actual_width = ref_item.width;
         this.actual_height = ref_item.height;
         this.actual_depth = ref_item.depth;
+    }
+
+    public BoxJSON Copy()
+    {
+        BoxJSON copy = new BoxJSON();
+
+        this.width = copy.width;
+        this.height = copy.height;
+        this.depth = copy.depth;
+
+        this.name = copy.name;
+        this.img_path = copy.img_path;
+
+        this.actual_width = copy.width;
+        this.actual_height = copy.height;
+        this.actual_depth = copy.depth;
+
+        return copy;
     }
 
     public float actual_width;

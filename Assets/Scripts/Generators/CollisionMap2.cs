@@ -7,14 +7,17 @@ public class CollisionMap2
 {
     // Eeach node has it's own collision infos in it's relevant position in the array
     public Drag3D[] cubes;
+    public Vector3[] draglines;
+
     Dictionary<int, List<int>> collisionNote;
 
     public Vector2[] vertices_a ;
     public Vector2[] vertices_b ;
 
-    public CollisionMap2(Drag3D[] c)
+    public CollisionMap2(Drag3D[] c, Vector3[] _draglines)
     {
         cubes = c;
+        draglines = _draglines;
         collisionNote = new Dictionary<int, List<int>>();
 
         for (int i = 0; i < c.Length; i++)
@@ -73,9 +76,40 @@ public class CollisionMap2
         }        
     }
 
-    public static void GenerateCollisionMap(Drag3D[] cubes, out CollisionMap2 cm)
+    public bool WouldBoxColide(BoxJSON cube)
     {
-        cm = new CollisionMap2(cubes);
+
+        /* Check if this new hypothetical box would colide */
+        /* This new box is not placed in the world yet, so we need to obtain the vertices positon in a new way */
+
+        Vector2[] vertices = new Vector2[4];
+
+        /* Vertices 0 and 3 we can know straigh away since they are on the dragline */
+        vertices[0] = (draglines[cube.cir] + (draglines[cube.cir + 1] - draglines[cube.cir]) * cube.cpr).to2DwoY();
+        vertices[3] = (draglines[cube.cil] + (draglines[cube.cil + 1] - draglines[cube.cil]) * cube.cpl).to2DwoY();
+
+        /* Calculate the remaning ones */
+        Vector2 normal = (vertices[0] - vertices[3]).PerpClockWise();
+
+        vertices[1] = vertices[0] + (-normal.normalized) * cube.actual_depth;
+        vertices[2] = vertices[2] + (-normal.normalized) * cube.actual_depth;
+
+        for (int i = 0; i < cubes.Length; i ++)
+        {
+            Vector2[] other_vertices;
+            cubes[i].GetBottomVertices(out other_vertices);
+            if(MiscFunc.BoxesColide2D(vertices, other_vertices))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static void GenerateCollisionMap(Drag3D[] cubes, Vector3[] dlines, out CollisionMap2 cm)
+    {
+        cm = new CollisionMap2(cubes, dlines);
 
         for (int p = 0; p < cubes.Length; p++)
         {
@@ -83,26 +117,41 @@ public class CollisionMap2
         }
     }
 
-    public void FindNextEmptySpace(GameObject other_cube)
+    public bool FindNextEmptySpace(ref Drag3D other_cube)
     {
         /* Find the next empty space in the draglines */
 
-        /* Check if it ispossible to add it to the right of the first product */
-
         /* Sort the cubes according to their positions right to left */
-
         List<Drag3D> ordered = new List<Drag3D>();
 
-        for(int i = 0; i < cubes.Length; i ++)
+        for (int i = 0; i < cubes.Length; i ++)
         {
             ordered.Add(cubes[i]);
         }
         ordered.Sort(Drag3D.CompareByPosition);
 
+        /* Check if it ispossible to add it to the right of the first product */
 
+        for (int i = 0; i < ordered.Count; i ++)
+        {
+            BoxJSON bx = other_cube.box.Copy();
 
+            bx.cir = other_cube.box.cir;
+            bx.cpr = other_cube.box.cpr + 0.01f;
 
-        /* If not possible check the right of the next prodctucts */
+            other_cube.CalculateMatchingPoint(bx.cir, bx.cpr, bx.actual_width, true, ref bx.cil, ref bx.cpl);
+
+            /* Temporarily position it to the right of the product and check if it fits */
+
+            if(!WouldBoxColide(bx))
+            {
+                /* Found a position which does't colide */
+                other_cube.box = bx.Copy();
+                return true;
+            }
+
+        }
+        return false;
 
     }
 
