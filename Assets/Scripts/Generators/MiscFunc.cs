@@ -292,7 +292,7 @@ public class MiscFunc
         float min_proj = Vector2.Dot(points[0], Axis);
         float max_proj = Vector2.Dot(points[0], Axis);
 
-        Axis = Axis.normalized;
+        //Axis = Axis.normalized;
         for(int i = 1; i < points.Length; i ++)
         {
             float curr = Vector2.Dot(points[i], Axis);
