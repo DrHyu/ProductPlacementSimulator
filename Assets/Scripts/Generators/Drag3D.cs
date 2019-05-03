@@ -242,9 +242,10 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
 
     /* - - - - - NON-STATIC METHODS - - - - - */
 
-    public void Initialize(BoxJSON b)
+    public void Initialize(BoxJSON b, ShelfGenerator parent)
     {
         box = b;
+        SG = parent;
 
         onMyCollisionEnterCallbacks = new List<OnMyCollisionEnterCallback>();
         onMyCollisionExitCallbacks = new List<OnMyCollisionExitCallback>();

@@ -142,7 +142,7 @@ public class ShelfGenerator : MonoBehaviour
         return GenerateProduct(box, dragLines);
     }
 
-    public static GameObject GenerateProduct(BoxJSON box, DragLines dragLines)
+    public GameObject GenerateProduct(BoxJSON box, DragLines dragLines)
     {
         GameObject gocube;
         if (box.x_repeats == 1 && box.y_repeats == 1 && box.z_repeats == 1)
@@ -153,7 +153,7 @@ public class ShelfGenerator : MonoBehaviour
             Drag3D d3d = gocube.AddComponent(typeof(Drag3D)) as Drag3D;
             ProductAesthetics pa = gocube.AddComponent<ProductAesthetics>();
 
-            d3d.Initialize(box);
+            d3d.Initialize(box, this);
 
             // Make it so there is always at least a very small gap in betwwen cubes
             gocube.GetComponent<BoxCollider>().size *= 1.05f;
@@ -196,7 +196,7 @@ public class ShelfGenerator : MonoBehaviour
             Drag3D d3d = gocube.AddComponent(typeof(Drag3D)) as Drag3D;
             ProductAesthetics pae = gocube.AddComponent<ProductAesthetics>();
 
-            d3d.Initialize(box);
+            d3d.Initialize(box, this);
 
             // Make it so there is always at least a very small gap in betwwen cubes
             //gocube.GetComponent<BoxCollider>().size *= 1.05f;
