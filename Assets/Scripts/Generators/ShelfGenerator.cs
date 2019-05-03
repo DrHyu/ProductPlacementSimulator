@@ -21,7 +21,7 @@ public class ShelfGenerator : MonoBehaviour
 
     public List<bool> childs_selected;
 
-    public Vector3[] dragLines;
+    public DragLines dragLines;
 
     public CollisionMap2 sharedCollisionMap;
 
@@ -108,14 +108,13 @@ public class ShelfGenerator : MonoBehaviour
             }
         }
 
-        Vector3[] dragline = new Vector3[s.front_index.Length];
-        for (int a = 0; a < dragline.Length; a++)
+        Vector3[] vertices = new Vector3[s.front_index.Length];
+        for (int a = 0; a < vertices.Length; a++)
         {
-            dragline[a] = new Vector3(s.x_points[s.front_index[a]], 0, s.y_points[s.front_index[a]]);
+            vertices[a] = new Vector3(s.x_points[s.front_index[a]], 0, s.y_points[s.front_index[a]]);
         }
 
-        int[] vertexR;
-        dragLines = Drag3D.CalculateDragLines(dragline, 0.2f, out vertexR, true);
+        dragLines = new DragLines(vertices, 0.2f, true);
 
         cubes       = new List<Drag3D>();
         cubesJSON = new List<BoxJSON>();
@@ -131,7 +130,7 @@ public class ShelfGenerator : MonoBehaviour
             }
         }
 
-        CollisionMap2.GenerateCollisionMap(cubes.ToArray(), dragline, out sharedCollisionMap);
+        CollisionMap2.GenerateCollisionMap(cubes.ToArray(), dragLines, out sharedCollisionMap);
 
         initialized = true;
     }
@@ -143,7 +142,7 @@ public class ShelfGenerator : MonoBehaviour
         return GenerateProduct(box, dragLines);
     }
 
-    public static GameObject GenerateProduct(BoxJSON box, Vector3[] shelf_draglines)
+    public static GameObject GenerateProduct(BoxJSON box, DragLines dragLines)
     {
         GameObject gocube;
         if (box.x_repeats == 1 && box.y_repeats == 1 && box.z_repeats == 1)
@@ -154,7 +153,7 @@ public class ShelfGenerator : MonoBehaviour
             Drag3D d3d = gocube.AddComponent(typeof(Drag3D)) as Drag3D;
             ProductAesthetics pa = gocube.AddComponent<ProductAesthetics>();
 
-            d3d.Initialize(box, shelf_draglines);
+            d3d.Initialize(box);
 
             // Make it so there is always at least a very small gap in betwwen cubes
             gocube.GetComponent<BoxCollider>().size *= 1.05f;
@@ -197,7 +196,7 @@ public class ShelfGenerator : MonoBehaviour
             Drag3D d3d = gocube.AddComponent(typeof(Drag3D)) as Drag3D;
             ProductAesthetics pae = gocube.AddComponent<ProductAesthetics>();
 
-            d3d.Initialize(box, shelf_draglines);
+            d3d.Initialize(box);
 
             // Make it so there is always at least a very small gap in betwwen cubes
             //gocube.GetComponent<BoxCollider>().size *= 1.05f;
@@ -227,7 +226,7 @@ public class ShelfGenerator : MonoBehaviour
 
         b.cir = 0;
         b.cil = 0;
-        gocube.GetComponent<Drag3D>().CalculateMatchingPoint(b.cir, b.cpr, b.actual_width, true, ref b.cil, ref b.cpl);
+        dragLines.CalculateMatchingPoint(b.cir, b.cpr, b.actual_width, true, ref b.cil, ref b.cpl);
        
         return gocube;
     }
@@ -297,6 +296,22 @@ public class ShelfGenerator : MonoBehaviour
         }
     }
 
+    public void AttachNewProduct(BoxJSON b, GameObject cube)
+    {
+        Drag3D d = cube.GetComponent<Drag3D>();
+        d.box = b.Copy();
+        if (sharedCollisionMap.FindNextEmptySpace(ref d))
+        {
+            AttachProduct(b, cube);
+
+            Vector3 new_pos;
+            int c_index;
+            float c_pos;
+            FindAttachmentPoint(cube.GetComponent<Drag3D>(), out new_pos, out c_index, out c_pos);
+            cube.GetComponent<Drag3D>().SetStartingPosition(new_pos, c_index, c_pos);
+        }
+    }
+
     public void AttachProduct2(BoxJSON b, GameObject cube)
     {
         Drag3D d = cube.GetComponent<Drag3D>();
@@ -320,9 +335,9 @@ public class ShelfGenerator : MonoBehaviour
         float min_dist = float.PositiveInfinity;
         int  min_dist_indx = 0;
 
-        for (int c = 0; c < new_prod.dLines.Length-1 ; c ++)
+        for (int c = 0; c < dragLines.points.Length-1 ; c ++)
         {
-            float dist = (pos - new_prod.dLines[c]).sqrMagnitude;
+            float dist = (pos - dragLines.points[c]).sqrMagnitude;
 
             if(dist < min_dist)
             {
@@ -331,7 +346,7 @@ public class ShelfGenerator : MonoBehaviour
             }
         }
 
-        new_pos = new_prod.dLines[min_dist_indx];
+        new_pos = dragLines.points[min_dist_indx];
         c_pos = 0;
         c_index = min_dist_indx;
     }

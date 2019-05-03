@@ -7,14 +7,14 @@ public class CollisionMap2
 {
     // Eeach node has it's own collision infos in it's relevant position in the array
     public Drag3D[] cubes;
-    public Vector3[] draglines;
+    public DragLines draglines;
 
     Dictionary<int, List<int>> collisionNote;
 
     public Vector2[] vertices_a ;
     public Vector2[] vertices_b ;
 
-    public CollisionMap2(Drag3D[] c, Vector3[] _draglines)
+    public CollisionMap2(Drag3D[] c, DragLines _draglines)
     {
         cubes = c;
         draglines = _draglines;
@@ -85,8 +85,8 @@ public class CollisionMap2
         Vector2[] vertices = new Vector2[4];
 
         /* Vertices 0 and 3 we can know straigh away since they are on the dragline */
-        vertices[0] = (draglines[cube.cir] + (draglines[cube.cir + 1] - draglines[cube.cir]) * cube.cpr).to2DwoY();
-        vertices[3] = (draglines[cube.cil] + (draglines[cube.cil + 1] - draglines[cube.cil]) * cube.cpl).to2DwoY();
+        vertices[0] = (draglines.points[cube.cir] + (draglines.points[cube.cir + 1] - draglines.points[cube.cir]) * cube.cpr).to2DwoY();
+        vertices[3] = (draglines.points[cube.cil] + (draglines.points[cube.cil + 1] - draglines.points[cube.cil]) * cube.cpl).to2DwoY();
 
         /* Calculate the remaning ones */
         Vector2 normal = (vertices[0] - vertices[3]).PerpClockWise();
@@ -107,7 +107,7 @@ public class CollisionMap2
         return false;
     }
 
-    public static void GenerateCollisionMap(Drag3D[] cubes, Vector3[] dlines, out CollisionMap2 cm)
+    public static void GenerateCollisionMap(Drag3D[] cubes, DragLines dlines, out CollisionMap2 cm)
     {
         cm = new CollisionMap2(cubes, dlines);
 
@@ -139,7 +139,7 @@ public class CollisionMap2
             bx.cir = other_cube.box.cir;
             bx.cpr = other_cube.box.cpr + 0.01f;
 
-            other_cube.CalculateMatchingPoint(bx.cir, bx.cpr, bx.actual_width, true, ref bx.cil, ref bx.cpl);
+            draglines.CalculateMatchingPoint(bx.cir, bx.cpr, bx.actual_width, true, ref bx.cil, ref bx.cpl);
 
             /* Temporarily position it to the right of the product and check if it fits */
 
