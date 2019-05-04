@@ -121,38 +121,52 @@ public class CollisionMap2
     {
         /* Find the next empty space in the draglines */
 
-        /* Sort the cubes according to their positions right to left */
-        List<Drag3D> ordered = new List<Drag3D>();
-
-        for (int i = 0; i < cubes.Length; i ++)
-        {
-            ordered.Add(cubes[i]);
-        }
-        ordered.Sort(Drag3D.CompareByPosition);
-
-        /* Check if it ispossible to add it to the right of the first product */
-
-        for (int i = 0; i < ordered.Count; i ++)
+        if (cubes.Length == 0)
         {
             BoxJSON bx = other_cube.Copy();
 
-            bx.cir = ordered[i].box.cir;
-            bx.cpr = ordered[i].box.cpr + 0.01f;
+            bx.cil = 0;
+            bx.cpl = 0;
 
-            draglines.CalculateMatchingPoint(bx.cir, bx.cpr, bx.actual_width, true, ref bx.cil, ref bx.cpl);
+            draglines.CalculateMatchingPoint(bx.cil, bx.cpl, bx.actual_width, false, ref bx.cil, ref bx.cpl);
 
-            /* Temporarily position it to the right of the product and check if it fits */
-
-            if(!WouldBoxColide(bx))
-            {
-                /* Found a position which does't colide */
-                other_cube = bx.Copy();
-                return true;
-            }
-
+            other_cube = bx.Copy();
+            return true;
         }
-        return false;
+        else
+        {
+            /* Sort the cubes according to their positions right to left */
+            List<Drag3D> ordered = new List<Drag3D>();
 
+            for (int i = 0; i < cubes.Length; i++)
+            {
+                ordered.Add(cubes[i]);
+            }
+            ordered.Sort(Drag3D.CompareByPosition);
+
+            /* Check if it ispossible to add it to the right of the first product */
+
+            for (int i = 0; i < ordered.Count; i++)
+            {
+                BoxJSON bx = other_cube.Copy();
+
+                bx.cir = ordered[i].box.cir;
+                bx.cpr = ordered[i].box.cpr + 0.01f;
+
+                draglines.CalculateMatchingPoint(bx.cir, bx.cpr, bx.actual_width, true, ref bx.cil, ref bx.cpl);
+
+                /* Temporarily position it to the right of the product and check if it fits */
+
+                if (!WouldBoxColide(bx))
+                {
+                    /* Found a position which does't colide */
+                    other_cube = bx.Copy();
+                    return true;
+                }
+
+            }
+            return false;
+        }
     }
 
 }
