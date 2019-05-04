@@ -137,18 +137,21 @@ public class UIController : MonoBehaviour {
 
         Drag3D product =_UItoSimulation.AddProduct(stand_dropdown_index, shelf_dropdown_index, b);
 
-        _SimualtionToUI.NotifyNewProductAdded(product);
-
-        if (productIndexes != null && productIndexes.Length > 0)
+        if(product != null)
         {
-            bool[] new_index = new bool[productIndexes.Length + 1];
+            _SimualtionToUI.NotifyNewProductAdded(product);
 
-            for (int i = 0; i < productIndexes.Length; i++)
+            if (productIndexes != null && productIndexes.Length > 0)
             {
-                new_index[i] = productIndexes[i];
+                bool[] new_index = new bool[productIndexes.Length + 1];
+
+                for (int i = 0; i < productIndexes.Length; i++)
+                {
+                    new_index[i] = productIndexes[i];
+                }
+                new_index[productIndexes.Length] = false;
+                productIndexes = new_index;
             }
-            new_index[productIndexes.Length] = false;
-            productIndexes = new_index;
         }
 
         // Redraw UI

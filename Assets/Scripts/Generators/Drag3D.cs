@@ -219,24 +219,30 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
 
     public void OnDrawGizmos()
     {
-        Gizmos.matrix = transform.parent.localToWorldMatrix;
 
-
-        Gizmos.color = Color.green;
-        for (int i = 0; i < SG.dragLines.points.Length - 1; i++)
+        if (transform.parent != null)
         {
-            Gizmos.DrawLine(SG.dragLines.points[i], SG.dragLines.points[i + 1]);
+            Gizmos.matrix = transform.parent.localToWorldMatrix;
+        
+            Gizmos.color = Color.green;
+            for (int i = 0; i < SG.dragLines.points.Length - 1; i++)
+            {
+                Gizmos.DrawLine(SG.dragLines.points[i], SG.dragLines.points[i + 1]);
+            }
+
+            Vector3 right_p = SG.dragLines.points[box.cir] + (SG.dragLines.points[box.cir + 1] - SG.dragLines.points[box.cir]) * box.cpr;
+            Vector3 left_p = SG.dragLines.points[box.cil] + (SG.dragLines.points[box.cil + 1] - SG.dragLines.points[box.cil]) * box.cpl;
+
+            Gizmos.color = move_right ? Color.red : Color.green;
+            Gizmos.DrawLine(right_p, new Vector3(right_p.x, right_p.y + 100, right_p.z));
+
+            Gizmos.color = move_right ? Color.green : Color.red;
+            Gizmos.DrawLine(left_p, new Vector3(left_p.x, left_p.y + 100, left_p.z));
         }
-
-        Vector3 right_p = SG.dragLines.points[box.cir] + (SG.dragLines.points[box.cir + 1] - SG.dragLines.points[box.cir]) * box.cpr;
-        Vector3 left_p = SG.dragLines.points[box.cil] + (SG.dragLines.points[box.cil + 1] - SG.dragLines.points[box.cil]) * box.cpl;
-
-        Gizmos.color = move_right ? Color.red : Color.green;
-        Gizmos.DrawLine(right_p, new Vector3(right_p.x, right_p.y + 100, right_p.z));
-
-        Gizmos.color = move_right ? Color.green : Color.red;
-        Gizmos.DrawLine(left_p, new Vector3(left_p.x, left_p.y + 100, left_p.z));
-
+        else
+        {
+            Debug.Log("Unitialized");
+        }
 
     }
 
@@ -408,6 +414,19 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
 
 
     /* - - - - - STATIC METHODS - - - - - */
+
+
+    public void SetStartingPosition()
+    {
+
+        Vector3 vect = SG.dragLines.points[box.cir +1] - SG.dragLines.points[box.cir];
+        
+                                  /* Normal position calculation */
+        transform.localPosition = SG.dragLines.points[box.cir] + vect * box.cpr 
+                                /**/
+                                + (vect.to2DwoY().PerpAntiClockWise() * box.actual_depth).to3DwY(SG.dragLines.points[box.cir].y);
+
+    }
 
     public void SetStartingPosition(Vector3 pos, int c_index, float c_pos)
     {

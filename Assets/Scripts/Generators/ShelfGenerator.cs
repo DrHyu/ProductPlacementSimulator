@@ -124,7 +124,7 @@ public class ShelfGenerator : MonoBehaviour
         {
             for (int p = 0; p < this_shelf.boxes.Length; p++)
             {
-                GameObject new_cube = GenerateProduct(this_shelf.boxes[p], dragLines);
+                GameObject new_cube = GenerateProduct(this_shelf.boxes[p]);
                 new_cube.transform.SetParent(this.transform);
                 AttachProduct(this_shelf.boxes[p], new_cube);
             }
@@ -138,11 +138,6 @@ public class ShelfGenerator : MonoBehaviour
     // Generation of products //
 
     public GameObject GenerateProduct(BoxJSON box)
-    {
-        return GenerateProduct(box, dragLines);
-    }
-
-    public GameObject GenerateProduct(BoxJSON box, DragLines dragLines)
     {
         GameObject gocube;
         if (box.x_repeats == 1 && box.y_repeats == 1 && box.z_repeats == 1)
@@ -283,7 +278,7 @@ public class ShelfGenerator : MonoBehaviour
         childs_selected.Add(false);
 
         cube.GetComponent<Drag3D>().SG = this;
-
+        cube.transform.parent = this.transform;
 
         // Only need to update the UI for the products added after Start() has been executed 
         if(initialized == true)
@@ -296,39 +291,28 @@ public class ShelfGenerator : MonoBehaviour
         }
     }
 
-    public void AttachNewProduct(BoxJSON b, GameObject cube)
+    public GameObject AttachNewProduct(BoxJSON b)
     {
-        Drag3D d = cube.GetComponent<Drag3D>();
-        d.box = b.Copy();
-        if (sharedCollisionMap.FindNextEmptySpace(ref d))
+        if (sharedCollisionMap.FindNextEmptySpace(ref b))
         {
-            AttachProduct(b, cube);
+            GameObject go = this.GenerateProduct(b);
+            AttachProduct(b, go);
 
-            Vector3 new_pos;
-            int c_index;
-            float c_pos;
-            FindAttachmentPoint(cube.GetComponent<Drag3D>(), out new_pos, out c_index, out c_pos);
-            cube.GetComponent<Drag3D>().SetStartingPosition(new_pos, c_index, c_pos);
+            go.GetComponent<Drag3D>().SetStartingPosition();
+            return go;
+        }
+        else
+        {
+            return null;
         }
     }
 
     public void AttachProduct2(BoxJSON b, GameObject cube)
     {
-        Drag3D d = cube.GetComponent<Drag3D>();
-        d.box = b.Copy();
-        if (sharedCollisionMap.FindNextEmptySpace(ref d))
-        {
-            AttachProduct(b, cube);
 
-            Vector3 new_pos;
-            int c_index;
-            float c_pos;
-            FindAttachmentPoint(cube.GetComponent<Drag3D>(), out new_pos, out c_index, out c_pos);
-            cube.GetComponent<Drag3D>().SetStartingPosition(new_pos, c_index, c_pos);
-        }
     }
 
-    private void FindAttachmentPoint(Drag3D new_prod, out Vector3 new_pos, out int c_index, out float c_pos)
+    private void FindClosestAttatchmentPoint(Drag3D new_prod, out Vector3 new_pos, out int c_index, out float c_pos)
     {
         Vector3 pos = transform.InverseTransformPoint(new_prod.transform.position);
 

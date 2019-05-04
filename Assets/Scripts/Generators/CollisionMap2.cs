@@ -117,7 +117,7 @@ public class CollisionMap2
         }
     }
 
-    public bool FindNextEmptySpace(ref Drag3D other_cube)
+    public bool FindNextEmptySpace(ref BoxJSON other_cube)
     {
         /* Find the next empty space in the draglines */
 
@@ -134,10 +134,10 @@ public class CollisionMap2
 
         for (int i = 0; i < ordered.Count; i ++)
         {
-            BoxJSON bx = other_cube.box.Copy();
+            BoxJSON bx = other_cube.Copy();
 
-            bx.cir = other_cube.box.cir;
-            bx.cpr = other_cube.box.cpr + 0.01f;
+            bx.cir = ordered[i].box.cir;
+            bx.cpr = ordered[i].box.cpr + 0.01f;
 
             draglines.CalculateMatchingPoint(bx.cir, bx.cpr, bx.actual_width, true, ref bx.cil, ref bx.cpl);
 
@@ -146,7 +146,7 @@ public class CollisionMap2
             if(!WouldBoxColide(bx))
             {
                 /* Found a position which does't colide */
-                other_cube.box = bx.Copy();
+                other_cube = bx.Copy();
                 return true;
             }
 

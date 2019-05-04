@@ -305,4 +305,20 @@ public class DragLines
         }
     }
 
+    public Vector2 GetRightVertextPosition(BoxJSON b)
+    {
+        if(b.cir >= points.Length)
+        {
+            return points[points.Length - 1];
+        }
+        else
+        {
+            return points[b.cir] + (points[b.cir + 1] - points[b.cir]) * b.cpr;
+        }
+    }
+
+    public Vector2 GetLeftVertextPosition(BoxJSON b)
+    {
+        return points[b.cil] + (points[b.cil + 1] - points[b.cil]) * b.cpl;
+    }
 }
