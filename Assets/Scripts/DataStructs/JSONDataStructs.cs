@@ -75,16 +75,16 @@ public class BoxJSON : DBItem
     {
         BoxJSON copy = new BoxJSON();
 
-        this.width = copy.width;
-        this.height = copy.height;
-        this.depth = copy.depth;
+        copy.width = this.width;
+        copy.height = this.height;
+        copy.depth = this.depth;
 
-        this.name = copy.name;
-        this.img_path = copy.img_path;
+        copy.name = this.name;
+        copy.img_path = this.img_path;
 
-        this.actual_width = copy.width;
-        this.actual_height = copy.height;
-        this.actual_depth = copy.depth;
+        copy.actual_width = this.width;
+        copy.actual_height = this.height;
+        copy.actual_depth = this.depth;
 
         return copy;
     }
