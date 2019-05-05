@@ -14,15 +14,39 @@ public class CollisionMap2
     public Vector2[] vertices_a ;
     public Vector2[] vertices_b ;
 
-    public CollisionMap2(Drag3D[] c, DragLines _draglines)
+    private ShelfGenerator SG;
+
+    public CollisionMap2(Drag3D[] c, DragLines _draglines, ShelfGenerator parent)
     {
         cubes = c;
         draglines = _draglines;
+        SG = parent;
         collisionNote = new Dictionary<int, List<int>>();
 
         for (int i = 0; i < c.Length; i++)
         {
             collisionNote.Add(c[i].gameObject.GetInstanceID(), new List<int>());
+        }
+
+        for (int p = 0; p < cubes.Length; p++)
+        {
+            UpdateCollisionMap(cubes[p]);
+        }
+    }
+
+    public void UpdateProducts(Drag3D[] c)
+    {
+        cubes = c;
+        /* Recalculate everything*/
+        collisionNote.Clear();
+        for (int i = 0; i < c.Length; i++)
+        {
+            collisionNote.Add(c[i].gameObject.GetInstanceID(), new List<int>());
+        }
+
+        for (int p = 0; p < cubes.Length; p++)
+        {
+            UpdateCollisionMap(cubes[p]);
         }
     }
 
@@ -85,14 +109,23 @@ public class CollisionMap2
         Vector2[] vertices = new Vector2[4];
 
         /* Vertices 0 and 3 we can know straigh away since they are on the dragline */
-        vertices[0] = (draglines.points[cube.cir] + (draglines.points[cube.cir + 1] - draglines.points[cube.cir]) * cube.cpr).to2DwoY();
-        vertices[3] = (draglines.points[cube.cil] + (draglines.points[cube.cil + 1] - draglines.points[cube.cil]) * cube.cpl).to2DwoY();
+        vertices[0] = (draglines.points[cube.cil] + (draglines.points[cube.cil + 1] - draglines.points[cube.cil]) * cube.cpl).to2DwoY();
+        vertices[3] = (draglines.points[cube.cir] + (draglines.points[cube.cir + 1] - draglines.points[cube.cir]) * cube.cpr).to2DwoY();
+ 
 
         /* Calculate the remaning ones */
         Vector2 normal = (vertices[0] - vertices[3]).PerpClockWise();
 
         vertices[1] = vertices[0] + (-normal.normalized) * cube.actual_depth;
-        vertices[2] = vertices[2] + (-normal.normalized) * cube.actual_depth;
+        vertices[2] = vertices[3] + (-normal.normalized) * cube.actual_depth;
+
+        vertices[0] = SG.transform.TransformPoint(vertices[0].to3DwY(0)).to2DwoY();
+        vertices[1] = SG.transform.TransformPoint(vertices[1].to3DwY(0)).to2DwoY();
+        vertices[2] = SG.transform.TransformPoint(vertices[2].to3DwY(0)).to2DwoY();
+        vertices[3] = SG.transform.TransformPoint(vertices[3].to3DwY(0)).to2DwoY();
+
+        /* Use the shelf transform to get world coordinates */
+
 
         for (int i = 0; i < cubes.Length; i ++)
         {
@@ -107,30 +140,21 @@ public class CollisionMap2
         return false;
     }
 
-    public static void GenerateCollisionMap(Drag3D[] cubes, DragLines dlines, out CollisionMap2 cm)
-    {
-        cm = new CollisionMap2(cubes, dlines);
 
-        for (int p = 0; p < cubes.Length; p++)
-        {
-            cm.UpdateCollisionMap(cubes[p]);
-        }
-    }
 
-    public bool FindNextEmptySpace(ref BoxJSON other_cube)
+    public bool FindNextEmptySpace(BoxJSON sizes, out BoxJSON out_box)
     {
         /* Find the next empty space in the draglines */
-
+        out_box = null;
         if (cubes.Length == 0)
         {
-            BoxJSON bx = other_cube.Copy();
+            out_box = sizes.Copy();
 
-            bx.cil = 0;
-            bx.cpl = 0;
+            out_box.cir = 0;
+            out_box.cpr = 0.01f;
 
-            draglines.CalculateMatchingPoint(bx.cil, bx.cpl, bx.actual_width, false, ref bx.cil, ref bx.cpl);
+            draglines.CalculateMatchingPoint(out_box.cir, out_box.cpr, out_box.actual_width, true, ref out_box.cil, ref out_box.cpl);
 
-            other_cube = bx.Copy();
             return true;
         }
         else
@@ -148,22 +172,51 @@ public class CollisionMap2
 
             for (int i = 0; i < ordered.Count; i++)
             {
-                BoxJSON bx = other_cube.Copy();
+                out_box = sizes.Copy();
+                out_box.cir = ordered[i].box.cil;
+                out_box.cpr = ordered[i].box.cpl;
 
-                bx.cir = ordered[i].box.cir;
-                bx.cpr = ordered[i].box.cpr + 0.01f;
+                draglines.CalculateMatchingPoint(out_box.cir, out_box.cpr, out_box.actual_width, true, ref out_box.cil, ref out_box.cpl);
 
-                draglines.CalculateMatchingPoint(bx.cir, bx.cpr, bx.actual_width, true, ref bx.cil, ref bx.cpl);
-
-                /* Temporarily position it to the right of the product and check if it fits */
-
-                if (!WouldBoxColide(bx))
+                /* While we haven't reached the next box ... or the end of the draglines */
+                while (
+                    i == ordered.Count - 1 ?
+                    /* last index in draglines and position is at the end */
+                    !(out_box.cil == draglines.points.Length - 1 && out_box.cpl < 0.99f):
+                    /* stepped into the next product */
+                    (out_box.cil < ordered[i+1].box.cir || (out_box.cil == ordered[i + 1].box.cir && out_box.cpl < ordered[i + 1].box.cpr)))
                 {
-                    /* Found a position which does't colide */
-                    other_cube = bx.Copy();
-                    return true;
-                }
 
+                    // OPTION TO CONSIDER draglines.MoveInDragline(ref out_box.cil,ref out_box.cpl, draglines.points[out_box.cil], ref 5);
+
+                    /* If we can fit the rigth vertex of the product in this dragline */
+                    if (out_box.cpl <= 0.99f)
+                    {
+                        out_box.cpl += 0.01f;
+                    }
+                    /* Use the next dragline if it is not the last one */
+                    else if (out_box.cil != draglines.points.Length - 2)
+                    {
+                        out_box.cil += 1;
+                        out_box.cpl = 0;
+                    }
+                    /* No draglines left, can't fit the product */
+                    else
+                    {
+                        break;
+                    }
+
+                    draglines.CalculateMatchingPoint(out_box.cil, out_box.cpl, out_box.actual_width, false, ref out_box.cir, ref out_box.cpr);
+
+
+                    /* Temporarily position it to the right of the product and check if it fits */
+
+                    if (!WouldBoxColide(out_box))
+                    {
+                        /* Found a position which does't colide */
+                        return true;
+                    }
+                }
             }
             return false;
         }

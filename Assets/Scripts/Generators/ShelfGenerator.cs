@@ -72,8 +72,6 @@ public class ShelfGenerator : MonoBehaviour
         MeshGenerator meshGen = new MeshGenerator(s.x_points, s.y_points);
         Mesh msh = meshGen.get3DMeshFrom2D(-s.thickness);
 
-       
-
         // Render the mesh
         shelf_mesh.AddComponent(typeof(MeshRenderer));
         MeshFilter meshRenderer = shelf_mesh.AddComponent(typeof(MeshFilter)) as MeshFilter;
@@ -114,7 +112,7 @@ public class ShelfGenerator : MonoBehaviour
             vertices[a] = new Vector3(s.x_points[s.front_index[a]], 0, s.y_points[s.front_index[a]]);
         }
 
-        dragLines = new DragLines(vertices, 0.2f, true);
+        dragLines = new DragLines(vertices, 0.2f, false);
 
         cubes       = new List<Drag3D>();
         cubesJSON = new List<BoxJSON>();
@@ -130,7 +128,7 @@ public class ShelfGenerator : MonoBehaviour
             }
         }
 
-        CollisionMap2.GenerateCollisionMap(cubes.ToArray(), dragLines, out sharedCollisionMap);
+        sharedCollisionMap = new CollisionMap2(cubes.ToArray(), dragLines, this);
 
         initialized = true;
     }
@@ -216,36 +214,10 @@ public class ShelfGenerator : MonoBehaviour
             rb.isKinematic = true;
             rb.useGravity = false;
         }
-
-        BoxJSON b = gocube.GetComponent<Drag3D>().box;
-
-        b.cir = 0;
-        b.cil = 0;
-        dragLines.CalculateMatchingPoint(b.cir, b.cpr, b.actual_width, true, ref b.cil, ref b.cpl);
-       
         return gocube;
     }
 
     // Collision maps related methods //
-
-    public void InvalidateChildCollisionMaps()
-    {
-        foreach (Drag3D go in cubes)
-        {
-            go.cm = null;
-        }
-    }
-
-    public void InvalideChildCollisionMaps(int exceptID)
-    {
-        foreach (Drag3D go in cubes)
-        {
-            if (go.GetInstanceID() != exceptID)
-            {
-                go.cm = null;
-            }
-        }
-    }
 
     public void NotifyCollision(int[] IDs, int srcID)
     {
@@ -273,30 +245,31 @@ public class ShelfGenerator : MonoBehaviour
         cubes.Add(cube.GetComponent<Drag3D>());
         cubesJSON.Add(b);
         id2cube.Add(cube.GetInstanceID(), cube);
-        InvalidateChildCollisionMaps();
 
         childs_selected.Add(false);
 
         cube.GetComponent<Drag3D>().SG = this;
         cube.transform.parent = this.transform;
 
+        if(initialized)
+            sharedCollisionMap.UpdateProducts(cubes.ToArray());
+
         // Only need to update the UI for the products added after Start() has been executed 
-        if(initialized == true)
+        if (initialized == true)
         {
             ExecOnItemAttachedCallbacks(transform.parent.GetComponent<StandGenerator>(), this, cube.GetComponent<Drag3D>());
             SetSelected();
-            //sharedCollisionMap.UpdateCollisionMap(cube.GetComponent<Drag3D>());
-            CollisionMap2.GenerateCollisionMap(cubes.ToArray(), dragLines, out sharedCollisionMap);
-
+            sharedCollisionMap.UpdateProducts(cubes.ToArray());
         }
     }
 
     public GameObject AttachNewProduct(BoxJSON b)
     {
-        if (sharedCollisionMap.FindNextEmptySpace(ref b))
+        BoxJSON out_box;
+        if (sharedCollisionMap.FindNextEmptySpace(b, out out_box))
         {
-            GameObject go = this.GenerateProduct(b);
-            AttachProduct(b, go);
+            GameObject go = this.GenerateProduct(out_box);
+            AttachProduct(out_box, go);
 
             go.GetComponent<Drag3D>().SetStartingPosition();
             return go;
@@ -337,13 +310,13 @@ public class ShelfGenerator : MonoBehaviour
 
     public void DeattachProduct(Drag3D leaving_product, bool trigger_callback = false)
     {
-        InvalidateChildCollisionMaps();
         int idx = cubes.IndexOf(leaving_product);
         cubes.Remove(leaving_product);
         cubesJSON.Remove(leaving_product.box);
         id2cube.Remove(leaving_product.gameObject.GetInstanceID());
         childs_selected.RemoveAt(idx);
 
+        sharedCollisionMap.UpdateProducts(cubes.ToArray());
         if (trigger_callback)
             ExecOnItemDeattachedCallbacks(transform.parent.GetComponent<StandGenerator>(), this, leaving_product);
     }

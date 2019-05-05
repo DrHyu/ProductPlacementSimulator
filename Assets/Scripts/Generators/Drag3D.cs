@@ -8,7 +8,6 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
 {
 
     private bool initialized = false;
-    public CollisionMap2 cm;
 
     public BoxJSON box;
 
@@ -425,21 +424,19 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
         transform.localPosition = SG.dragLines.points[box.cir] + vect * box.cpr 
                                 /**/
                                 + (vect.to2DwoY().PerpAntiClockWise() * box.actual_depth).to3DwY(SG.dragLines.points[box.cir].y);
-
     }
 
-    public void SetStartingPosition(Vector3 pos, int c_index, float c_pos)
+    public void SetStartingPosition(int c_index, float c_pos)
     {
-        transform.localPosition = pos;
-
         box.cir = c_index;
         box.cpr = c_pos;
 
         SG.dragLines.CalculateMatchingPoint(box.cir, box.cpr, box.actual_width, true, ref box.cil, ref box.cpl);
 
-        last_position = pos;
         last_index = c_index;
         last_pos_rel = c_pos;
+
+        SetStartingPosition();
     }
 
 
@@ -464,19 +461,19 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
         /* The closer to the initial dragline the higher result */
         if(a.box.cir < b.box.cir)
         {
-            return 1;
+            return -1;
         }
         else if(a.box.cir > b.box.cir)
         {
-            return -1;
+            return 1;
         }
         else if(a.box.cpr < b.box.cpr)
         {
-            return 1;
+            return -1;
         }
         else if (a.box.cpr > b.box.cpr)
         {
-            return -1;
+            return 1;
         }
         else
         {

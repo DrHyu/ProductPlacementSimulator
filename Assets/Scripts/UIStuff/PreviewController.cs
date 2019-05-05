@@ -33,7 +33,7 @@ public class PreviewController : MonoBehaviour {
         shelf_json.x_points = new float[] { -shelf_size, -shelf_size, shelf_size, shelf_size };
         shelf_json.y_points = new float[] { -shelf_size, shelf_size, shelf_size, -shelf_size };
         shelf_json.boxes = box == null ? new BoxJSON[0] : new BoxJSON[] { box };
-        shelf_json.boxes[0].cpr = 0.25f;
+
 
         shelf_json.thickness = shelf_size / 5.0f;
 
@@ -53,6 +53,14 @@ public class PreviewController : MonoBehaviour {
 
         SG.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
         SG.GenerateScene(sd);
+
+        shelf_json.boxes[0].cpr = 0.25f;
+        shelf_json.boxes[0].cir = 0;
+        //shelf_json.boxes[0].cil = 0;
+
+        ShelfGenerator shg = SG.stands[0].shelves[0];
+
+        shg.cubes[0].SetStartingPosition(0, 0.25f);
     
         /* Camera needs to focus the new object, the position of the new object is not defined till the next
             update cycle. Do the camera position update in the next lateupdate */
