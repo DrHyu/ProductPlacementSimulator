@@ -82,9 +82,13 @@ public class BoxJSON : DBItem
         copy.name = this.name;
         copy.img_path = this.img_path;
 
-        copy.actual_width = this.width;
-        copy.actual_height = this.height;
-        copy.actual_depth = this.depth;
+        copy.actual_width = this.actual_width;
+        copy.actual_height = this.actual_height;
+        copy.actual_depth = this.actual_depth;
+
+        copy.x_repeats = this.x_repeats;
+        copy.y_repeats = this.y_repeats;
+        copy.z_repeats = this.z_repeats;
 
         return copy;
     }

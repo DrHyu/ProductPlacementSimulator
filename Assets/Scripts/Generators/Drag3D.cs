@@ -48,7 +48,7 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
         if((dragging || (Input.GetKey(KeyCode.M) && selected)) && ! deattached)
         {
 
-            CalculateNextPosition(ref box);
+            CalculateNextPosition();
             transform.localPosition = CalculateCenterPosition(box);
 
             /* Update the collision AFTER the position has been updated */
@@ -247,10 +247,9 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
 
     /* - - - - - NON-STATIC METHODS - - - - - */
 
-    public void Initialize(BoxJSON b, ShelfGenerator parent)
+    public void Initialize(BoxJSON b)
     {
         box = b;
-        SG = parent;
 
         onMyCollisionEnterCallbacks = new List<OnMyCollisionEnterCallback>();
         onMyCollisionExitCallbacks = new List<OnMyCollisionExitCallback>();
@@ -263,6 +262,11 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
             Debug.LogError("Product Aesthetics not present");
     }
 
+    public void BindToParent(ShelfGenerator _SG)
+    {
+        this.transform.parent = _SG.gameObject.transform;
+        SG = _SG;
+    }
     private Vector3 CalculateMousePosition()
     {
         //Calculate the estimaded mouse position in the 3D space
@@ -273,13 +277,13 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
         return transform.parent.InverseTransformPoint(mousePos3D);
     }
 
-    private void CalculateNextPosition(ref BoxJSON b)
+    private void CalculateNextPosition()
     {
 
         Vector3 mousePos3D = CalculateMousePosition();
 
-        Vector3 right_p = SG.dragLines.points[b.cir] + (SG.dragLines.points[b.cir + 1] - SG.dragLines.points[b.cir]) * b.cpr;
-        Vector3 left_p = SG.dragLines.points[b.cil] + (SG.dragLines.points[b.cil + 1] - SG.dragLines.points[b.cil]) * b.cpl;
+        Vector3 right_p = SG.dragLines.points[box.cir] + (SG.dragLines.points[box.cir + 1] - SG.dragLines.points[box.cir]) * box.cpr;
+        Vector3 left_p = SG.dragLines.points[box.cil] + (SG.dragLines.points[box.cil + 1] - SG.dragLines.points[box.cil]) * box.cpl;
 
         Vector2 v1 = (right_p - left_p).to2DwoY();
         Vector2 v2 = (mousePos3D - transform.localPosition).to2DwoY();
@@ -295,8 +299,8 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
         move_right = angle <= 90;
 
         //bool move_right = false;
-        int c_index = move_right ? b.cir : b.cil;
-        float c_pos = move_right ? b.cpr : b.cpl;
+        int c_index = move_right ? box.cir : box.cil;
+        float c_pos = move_right ? box.cpr : box.cpl;
 
         Vector3 pos = move_right ? right_p : left_p;
 
@@ -324,15 +328,15 @@ public class Drag3D : MonoBehaviour,  IPointerDownHandler, IPointerUpHandler
 
         if (move_right)
         {
-            b.cir = c_index;
-            b.cpr = c_pos;
-            SG.dragLines.CalculateMatchingPoint(b.cir, b.cpr, b.actual_width, true, ref b.cil, ref b.cpl);
+            box.cir = c_index;
+            box.cpr = c_pos;
+            SG.dragLines.CalculateMatchingPoint(box.cir, box.cpr, box.actual_width, true, ref box.cil, ref box.cpl);
         }
         else
         {
-            b.cil = c_index;
-            b.cpl = c_pos;
-            SG.dragLines.CalculateMatchingPoint(b.cil, b.cpl, b.actual_width, false, ref b.cir, ref b.cpr);
+            box.cil = c_index;
+            box.cpl = c_pos;
+            SG.dragLines.CalculateMatchingPoint(box.cil, box.cpl, box.actual_width, false, ref box.cir, ref box.cpr);
         }
     }
 

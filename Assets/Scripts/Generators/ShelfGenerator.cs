@@ -123,7 +123,6 @@ public class ShelfGenerator : MonoBehaviour
             for (int p = 0; p < this_shelf.boxes.Length; p++)
             {
                 GameObject new_cube = GenerateProduct(this_shelf.boxes[p]);
-                new_cube.transform.SetParent(this.transform);
                 AttachProduct(this_shelf.boxes[p], new_cube);
             }
         }
@@ -146,7 +145,7 @@ public class ShelfGenerator : MonoBehaviour
             Drag3D d3d = gocube.AddComponent(typeof(Drag3D)) as Drag3D;
             ProductAesthetics pa = gocube.AddComponent<ProductAesthetics>();
 
-            d3d.Initialize(box, this);
+            d3d.Initialize(box);
 
             // Make it so there is always at least a very small gap in betwwen cubes
             gocube.GetComponent<BoxCollider>().size *= 1.05f;
@@ -189,7 +188,7 @@ public class ShelfGenerator : MonoBehaviour
             Drag3D d3d = gocube.AddComponent(typeof(Drag3D)) as Drag3D;
             ProductAesthetics pae = gocube.AddComponent<ProductAesthetics>();
 
-            d3d.Initialize(box, this);
+            d3d.Initialize(box);
 
             // Make it so there is always at least a very small gap in betwwen cubes
             //gocube.GetComponent<BoxCollider>().size *= 1.05f;
@@ -241,7 +240,7 @@ public class ShelfGenerator : MonoBehaviour
 
     public void AttachProduct(BoxJSON b, GameObject cube)
     {
-        cube.transform.SetParent(this.transform);
+        cube.GetComponent<Drag3D>().BindToParent(this);
         cubes.Add(cube.GetComponent<Drag3D>());
         cubesJSON.Add(b);
         id2cube.Add(cube.GetInstanceID(), cube);
